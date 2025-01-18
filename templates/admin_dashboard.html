@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}
+<title>관리자 모드</title>
+{% endblock %}
+{% block nav %}    
+<div style="float:right;">
+<span style="color:#fff;" class="me-3">환영합니다, 관리자 님! </span>
+<a href="/logout" class="btn btn-danger">
+로그아웃
+</a>
+</div> 
+{% endblock %}
+{% block body %}
+<div class="container mt-5">
+    <!-- 메뉴판 -->
+    <div class="row text-center">
+        <!-- 기능소개 -->
+        <div class="col-md-4">
+            <div class="card shadow-lg border-0 mb-4" 
+                 style="background: #f2f2f2; border-radius: 15px; transition: transform 0.3s, box-shadow 0.3s;">
+                <div class="card-body">
+                    <i class="fas fa-cogs fa-3x text-primary mb-3"></i>
+                    <h3 class="card-title">기능소개</h3>
+                    <p class="card-text">우리 서비스의 주요 기능과 특징을 확인하세요!</p>
+                    <a href="{{ url_for('feature') }}" class="btn btn-primary btn-lg">자세히 보기</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 연락처 -->
+        <div class="col-md-4">
+            <div class="card shadow-lg border-0 mb-4" 
+                 style="background: #f2f2f2; border-radius: 15px; transition: transform 0.3s, box-shadow 0.3s;">
+                <div class="card-body">
+                    <i class="fas fa-envelope fa-3x text-primary mb-3"></i>
+                    <h3 class="card-title">연락처</h3>
+                    <p class="card-text">문의사항이 있으시면 언제든지 연락해주세요.</p>
+                    <a href="{{ url_for('contact') }}" class="btn btn-primary btn-lg">문의하기</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 서비스 시작 -->
+        <div class="col-md-4">
+            <div class="card shadow-lg border-0 mb-4" 
+                 style="background: #f2f2f2; border-radius: 15px; transition: transform 0.3s, box-shadow 0.3s;">
+                <div class="card-body">
+                    <i class="fas fa-play-circle fa-3x text-success mb-3"></i>
+                    <h3 class="card-title">서비스 시작</h3>
+                    <p class="card-text">지금 바로 맞춤형 추천 서비스를 시작해보세요!</p>
+                    <a href="{{ url_for('start_service') }}" class="btn btn-success btn-lg">시작하기</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
