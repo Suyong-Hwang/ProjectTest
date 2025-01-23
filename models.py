@@ -11,7 +11,7 @@ class DBManager:
     def connect(self): 
         try :
             self.connection = mysql.connector.connect(
-                host = "10.0.66.6",
+                host = "10.0.66.4",
                 user = "suyong",
                 password="1234",
                 database="test_db",
@@ -404,8 +404,7 @@ class DBManager:
             self.connect()
             sql = """
             UPDATE members
-            SET active_approval_status = 'req
-            uesting'
+            SET active_approval_status = 'requesting'
             WHERE userid = %s
             """
             self.cursor.execute(sql, (userid,))
