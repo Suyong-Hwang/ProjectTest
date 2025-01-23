@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}<title>회원 탈퇴 사유 작성</title>{% endblock %}
+{% block nav %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container d-flex justify-content-between align-items-center">
+        <a class="navbar-brand" href="{{ url_for('dashboard') }}">알레르기 및 질병 맞춤형 건강기능식품 추천 서비스</a>
+        <div style="display: flex; align-items: center;">
+            <span style="color:#fff;" class="me-3">환영합니다, {{ member.username }} 님!</span>
+            <a href="/logout" class="btn btn-danger me-2">로그아웃</a>
+        </div>
+    </div>  
+</nav>
+{% endblock %}
+{% block body %}
+<div class="content">
+    <h2 style="text-align:center;">{{userid}}님의 회원탈퇴 페이지</h2>
+    <div class="container">
+        <form method="POST" action="{{ url_for('self_delete_member', userid=userid) }}">
+            <div class="mb-3">
+                <label for="reason" class="form-label">탈퇴 사유를 선택하세요:</label>
+                <select id="reason" name="reason" class="form-select" required>
+                    <option value="" disabled selected>사유를 선택하세요</option>
+                    <option value="서비스 품질 불만족">서비스 품질이 불만족스러움</option>
+                    <option value="사용 빈도 낮음">서비스 사용 빈도가 낮음</option>
+                    <option value="개인정보 보호 우려">개인정보 보호와 관련된 우려</option>
+                    <option value="기타 서비스 이용">다른 유사 서비스를 이용하기 위해</option>
+                    <option value="기타">기타</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="notes" class="form-label">추가 설명 (선택)</label>
+                <textarea id="notes" name="notes" class="form-control" rows="3" placeholder="추가 설명을 입력하세요 (선택)"></textarea>
+            </div>
+            <button type="submit" class="btn btn-danger">회원 탈퇴</button>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">취소</a>
+        </form>
+    </div>
+</div>
+<div class="content mb-4"></div>
+<div class="content mb-4"></div>
+<div class="content mb-4"></div>
+<div class="content mb-4"></div>
+
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh; /* 화면 전체 높이를 차지 */
+    }
+
+    .content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center; /* 본문을 수직으로 가운데 정렬 */
+    }
+
+    .container {
+        padding: 20px; /* 본문에 적당한 여백 추가 */
+    }
+</style>
+{% endblock %}
