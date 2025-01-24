@@ -3,10 +3,20 @@
 <title>관리자 모드</title>
 {% endblock %}
 {% block nav %}    
-<div style="float:right;">
-<span style="color:#fff;" class="me-3">환영합니다, 관리자 님! </span>
-<a href="/logout" class="btn btn-danger">
-로그아웃
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+            <a class="navbar-brand" href="{{ url_for('admin_dashboard')}}">알레르기 및 질병 맞춤형 건강기능식품 추천 서비스
+            </a>
+            
+                <div style="float:right;">
+                <span style="color:#fff;" class="me-3">환영합니다, 관리자 님! </span>
+                <a href="/logout" class="btn btn-danger">
+                로그아웃
+                </a>
+                </div> 
+                </div>        
+    </div>     
+</nav>
 </a>
 </div> 
 {% endblock %}
@@ -27,31 +37,70 @@
             </div>
         </div>
 
-        <!-- 연락처 -->
+        <!-- 문의사항 확인하기 -->
         <div class="col-md-4">
             <div class="card shadow-lg border-0 mb-4" 
                  style="background: #f2f2f2; border-radius: 15px; transition: transform 0.3s, box-shadow 0.3s;">
                 <div class="card-body">
-                    <i class="fas fa-envelope fa-3x text-primary mb-3"></i>
-                    <h3 class="card-title">연락처</h3>
-                    <p class="card-text">문의사항이 있으시면 언제든지 연락해주세요.</p>
-                    <a href="{{ url_for('contact') }}" class="btn btn-primary btn-lg">문의하기</a>
+                    <i class="fas fa-comment-dots fa-3x text-primary mb-3"></i>
+                    <h3 class="card-title">문의사항</h3>
+                    <p class="card-text">문의사항을 확인합니다</p>
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary btn-lg">확인하기</a>
                 </div>
             </div>
         </div>
 
-        <!-- 서비스 시작 -->
+        <!-- 회원관리 -->
         <div class="col-md-4">
             <div class="card shadow-lg border-0 mb-4" 
                  style="background: #f2f2f2; border-radius: 15px; transition: transform 0.3s, box-shadow 0.3s;">
                 <div class="card-body">
-                    <i class="fas fa-play-circle fa-3x text-success mb-3"></i>
-                    <h3 class="card-title">서비스 시작</h3>
-                    <p class="card-text">지금 바로 맞춤형 추천 서비스를 시작해보세요!</p>
-                    <a href="{{ url_for('start_service') }}" class="btn btn-success btn-lg">시작하기</a>
+                    <i class="fas fa-users fa-3x text-success mb-3"></i> <!-- 아이콘 변경 -->
+                    <h3 class="card-title">회원 관리</h3>
+                    <p class="card-text">회원 정보를 확인하고 관리합니다.</p>
+                    <a href="{{ url_for('member_management') }}" class="btn btn-success btn-lg">관리하기</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
+<style>
+.flash-message {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 15px 25px;
+    border-radius: 5px;
+    font-size: 16px;
+    z-index: 1000;
+    width: 350px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+/* 플래시 메시지 타입별 스타일 */
+.flash-message.info {
+    background-color: #4CAF50;
+    color: white;
+    top: 20px; /* 가장 위 */
+}
+
+.flash-message.warning {
+    background-color: #FFC107;
+    color: black;
+    top: 80px; /* info 아래 */
+}
+
+.flash-message.danger {
+    background-color: #F44336;
+    color: white;
+    top: 140px; /* warning 아래 */
+}
+
+.flash-message.show {
+    opacity: 1;
+}
+
+</style>
 {% endblock %}

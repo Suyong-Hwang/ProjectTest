@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}
+<title>회원 목록 관리</title>
+{% endblock %}
+{% block nav %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" href="{{ url_for('admin_dashboard') }}">알레르기 및 질병 맞춤형 건강기능식품 추천 서비스</a>
+        <div style="float:right;">
+            <span style="color:#fff;" class="me-3">환영합니다, 관리자 님! </span>
+            <a href="/logout" class="btn btn-danger">로그아웃</a>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+{% block body %}
+<div style="max-height: 80vh; overflow-y: auto;">
+<div class="container mt-5">
+    <!-- 메뉴판 -->
+    <div class="row text-center">
+        <!-- 전체 회원 목록 -->
+        <div class="col-md-4">
+            <div class="card shadow-lg border-0 mb-4" 
+                 style="background: #f2f2f2; border-radius: 15px; transition: transform 0.3s, box-shadow 0.3s;">
+                <div class="card-body">
+                    <i class="fas fa-users fa-3x text-primary mb-3"></i> <!-- 아이콘 변경 -->
+                    <h3 class="card-title">전체 회원 정보</h3>
+                    <p class="card-text">전체 회원들의 정보를 확인합니다</p>
+                    <a href="{{ url_for('members') }}" class="btn btn-primary btn-lg">정보 확인하기</a>
+                </div>
+            </div>
+        </div>
+
+         <!-- 서비스 이용 가능한 일반회원 -->
+         <div class="col-md-4">
+            <div class="card shadow-lg border-0 mb-4" 
+                 style="background: #f2f2f2; border-radius: 15px; transition: transform 0.3s, box-shadow 0.3s;">
+                <div class="card-body">
+                    <i class="fas fa-user-check fa-3x text-primary mb-3"></i> <!-- 아이콘 변경 -->
+                    <h3 class="card-title">일반회원</h3>
+                    <p class="card-text">서비스 이용 가능한 회원목록 입니다.</p>
+                    <a href="{{ url_for('can_service_members') }}" class="btn btn-primary btn-lg">정보 확인하기</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 가입승인 대기중인 회원 -->
+        <div class="col-md-4">
+            <div class="card shadow-lg border-0 mb-4" 
+                 style="background: #f2f2f2; border-radius: 15px; transition: transform 0.3s, box-shadow 0.3s;">
+                <div class="card-body">
+                    <i class="fas fa-user-clock fa-3x text-success mb-3"></i> <!-- 아이콘 변경 -->
+                    <h3 class="card-title">가입 승인 대기 비회원</h3>
+                    <p class="card-text">가입 승인을 기다리는 비회원 목록입니다.</p>
+                    <a href="{{ url_for('pending_members') }}" class="btn btn-primary btn-lg">정보 확인하기</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 서비스 이용 차단 당한 회원 -->
+        <div class="col-md-4">
+            <div class="card shadow-lg border-0 mb-4" 
+                 style="background: #f2f2f2; border-radius: 15px; transition: transform 0.3s, box-shadow 0.3s;">
+                <div class="card-body">
+                    <i class="fas fa-user-times fa-3x text-danger mb-3"></i> <!-- 아이콘 변경 -->
+                    <h3 class="card-title">서비스 이용 차단 회원</h3>
+                    <p class="card-text">서비스가 이용 불가능한 회원목록 입니다.</p>
+                    <a href="{{ url_for('denial_service_member') }}" class="btn btn-primary btn-lg">정보 확인하기</a>
+                </div>
+            </div>
+        </div>
+
+         <!-- 가입승인 거부 당한 회원 -->
+         <div class="col-md-4">
+            <div class="card shadow-lg border-0 mb-4" 
+                 style="background: #f2f2f2; border-radius: 15px; transition: transform 0.3s, box-shadow 0.3s;">
+                <div class="card-body">
+                    <i class="fas fa-user-clock fa-3x text-danger mb-3"></i> <!-- 아이콘 변경 -->
+                    <h3 class="card-title">가입 승인 거부된 비회원</h3>
+                    <p class="card-text">가입 승인이 거부된 비회원 목록입니다.</p>
+                    <a href="{{ url_for('rejected_members') }}" class="btn btn-primary btn-lg">정보 확인하기</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 강제탈퇴 당한 회원 -->
+        <div class="col-md-4">
+            <div class="card shadow-lg border-0 mb-4" 
+                 style="background: #f2f2f2; border-radius: 15px; transition: transform 0.3s, box-shadow 0.3s;">
+                <div class="card-body">
+                    <i class="fas fa-users-slash fa-3x text-danger mb-3"></i> <!-- 아이콘 변경 -->
+                    <h3 class="card-title">강제 탈퇴 당한 회원 정보</h3>
+                    <p class="card-text">강제 탈퇴 된 회원의 목록과 정보를 볼 수 있습니다.</p>
+                    <a href="{{ url_for('removed_members') }}" class="btn btn-primary btn-lg">정보 확인하기</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 휴면 상태 회원 -->
+        <div class="col-md-4">
+            <div class="card shadow-lg border-0 mb-4" 
+                 style="background: #f2f2f2; border-radius: 15px; transition: transform 0.3s, box-shadow 0.3s;">
+                <div class="card-body">
+                    <i class="fas fa-user-clock fa-3x text-secondary mb-3"></i>
+                    <h3 class="card-title">휴면회원</h3>
+                    <p class="card-text">휴면 상태 회원들의 목록을 보여줍니다.</p>
+                    <a href="{{ url_for('dormant_members') }}" class="btn btn-primary btn-lg">정보 확인하기</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 회원 탈퇴한 회원들 -->
+        <div class="col-md-4">
+            <div class="card shadow-lg border-0 mb-4" 
+                 style="background: #f2f2f2; border-radius: 15px; transition: transform 0.3s, box-shadow 0.3s;">
+                <div class="card-body">
+                    <i class="fas fa-users-slash fa-3x mb-3" style="color: #6c757d;"></i> <!-- 아이콘 변경 -->
+                    <h3 class="card-title">탈퇴한 회원 정보</h3>
+                    <p class="card-text">탈퇴한 회원의 목록과 정보를 볼 수 있습니다.</p>
+                    <a href='/admin/member_management/self_delete_member' class="btn btn-primary btn-lg">정보 확인하기</a>
+                </div>
+            </div>
+        </div>  
+    </div>
+</div>
+</div>
+{% endblock %}

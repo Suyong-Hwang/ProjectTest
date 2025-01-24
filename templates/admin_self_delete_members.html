@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title%}
+<title>회원 탈퇴 회원 목록</title>
+{% endblock %}
+{% block nav %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" href="{{ url_for('admin_dashboard') }}">알레르기 및 질병 맞춤형 건강기능식품 추천 서비스</a>
+        <div style="float:right;">
+            <span style="color:#fff;" class="me-3">환영합니다, 관리자 님! </span>
+            <a href="/logout" class="btn btn-danger">로그아웃</a>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+{% block body %}
+<div class="container mt-4">
+    <a href="{{ url_for('member_management') }}" style="text-decoration: none; color: black;">
+        <h2>회원 관리</h2>
+    </a>
+    <div class="d-flex justify-content-between align-items-center" 
+         style="max-width: 270px; font-size: 14px; padding: 6px 12px; 
+                background-color: #e9f7fc; border-radius: 8px; margin-bottom: 15px;">
+        <!-- 전체 회원수 텍스트 -->
+        <div class="d-flex align-items-center" style="flex-grow: 1;">
+            <span style="color: #5a5a5a; letter-spacing: 1px; white-space: nowrap;">
+                회원 탈퇴한 회원 수:
+            </span>
+        </div>
+        <!-- 회원 수와 아이콘 -->
+        <div class="d-flex align-items-center" style="flex-shrink: 0;">
+            <span style="font-size: 14px; color: #1e3a8a; font-weight: bold; 
+                         margin-right: 5px; text-align: right; width: 70px;">
+                {{ number }} 명
+            </span>
+            <i class="fas fa-users-slash text-danger" style="font-size: 18px;"></i>
+        </div>
+    </div>    
+    <h2 style = "text-align : center;">회원탈퇴한 회원 목록</h2><br>
+    {% if not members %}
+    <h2 style = "text-align : center"> 회원탈퇴한 회원이 없습니다.</h2>
+    {% endif %}
+    
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th style="text-align:center;">아이디</th>
+                    <th style="text-align:center;">이름</th>
+                    <th style="text-align:center;">생년월일</th>
+                    <th style="text-align:center;">이메일</th>
+                    <th style="text-align:center;">마지막로그인</th>
+                    <td style="text-align:center;">가입일자</td>
+                    <td style="text-align:center;">탈퇴사유</td>
+                    <td style="text-align:center;">추가설명</td>
+                    <td style="text-align:center;">탈퇴일자</td>            
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 승인 대기 회원 -->
+                {% for member in members %}
+                <tr>
+                    <td style="text-align:center;">{{ member.userid }}</td>
+                    <td style="text-align:center;">{{ member.username }}</td>
+                    <td style="text-align:center;">{{ member.birthday }}</td>
+                    <td style="text-align:center;">{{ member.email }}</td>
+                    {% if member.last_login %}
+                    <td style="text-align:center;">{{ member.last_login }}</td>
+                    {% else %}
+                    <td style="text-align:center;">로그인기록없음</td>
+                    {% endif %}
+                    <td style="text-align:center;">{{ member.join_date }}</td>
+                    <td style="text-align:center;">{{ member.reason }}</td>
+                    <!-- 서비스사용권한여부 -->
+                    {% if member.notes %}
+                    <td style="text-align:center;">{{ member.notes }}</td>
+                    {% else %}
+                    <td style="text-align:center;">추가내용없음</td>
+                    {% endif %}
+                    <td style="text-align:center;">{{ member.removed_at }}</td>
+                {% endfor %}
+            </tbody>
+        </table>  
+    </div>
+</div>
+{% endblock %}

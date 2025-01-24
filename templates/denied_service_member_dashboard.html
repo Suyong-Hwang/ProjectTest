@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>서비스 정지 계정 페이지입니다</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container my-5">
+        <div class="card text-center">
+            <div class="card-header bg-warning text-dark">
+                <h3>서비스 정지 계정 안내</h3>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">귀하의 계정은 현재 서비스 정지 상태입니다.</h5>
+                <p class="card-text">관리자의 승인이 완료되면 정상적으로 서비스를 이용하실 수 있습니다.</p>
+                <p class="card-text">서비스 사용 승인 되기 전까지는 서비스 이용이 제한됩니다.</p>
+                <!-- 버튼들을 flexbox로 가로 정렬 -->
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">홈으로 돌아가기</a>
+                    <form action="{{ url_for('service_approve_request') }}" method="POST" onsubmit="return confirmActive()">
+                        <!-- member.role 값을 서버로 전송 -->
+                        <button type="submit" class="btn btn-success">승인요청</button>
+                    </form>   
+                </div>
+            </div>
+            <div class="card-footer text-muted">
+                <p>관리자에게 문의하시려면 <a href="{{ url_for('enqire')}}">문의하기</a>를 눌러주세요.</p>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function confirmActive() {
+                    return confirm("서비스 활성화 신청 하시겠습니까?");
+                }
+    </script>
+</body>
+</html>
