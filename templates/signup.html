@@ -3,7 +3,6 @@
 {% block title %}
 <title>회원가입</title>
 {% endblock %}
-
 {% block body %}
     <div class="sign-form-continer">
         <div class="row justify-content-center">
@@ -54,4 +53,28 @@
             </div>
         </div>
     </div>
+    <style>
+    body, html {
+        height: 105%;
+        margin: 0;
+    }
+
+    .sign-form-container {
+        min-height: 100vh; /* 페이지가 최소한 전체 뷰포트 높이를 차지하도록 설정 */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 30px; /* 스크롤 여유 공간을 추가 */
+        box-sizing: border-box;
+    }
+
+    .signup-card {
+        width: 110%;
+        max-width: 350px;
+        padding: 30px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    </style>
 {% endblock %}

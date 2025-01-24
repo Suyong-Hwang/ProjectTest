@@ -12,6 +12,36 @@ app.secret_key = 'your-secret-key'  # 비밀 키 설정, 실제 애플리케이�
 
 manager = DBManager()
 
+##하루주기로 휴면 회원 자동 전환 
+
+last_update= None
+@app.before_request
+def check_and_update_dormant_members():
+    global last_update #외부에서 선언했기 떄문에 함수안에서 값을 변경하기위해서 global을 사용
+    now = datetime.now()
+
+    
+    #처음 시작할 때 last_update가 None이면 현재 시간을 자정으로 설정
+    if last_update is None:
+        result = manager.update_dormant_members()
+        if result:
+            print("휴면 계정 업데이트 완료!")
+        else:
+            print("휴면 계정 업데이트 실패 또는 변경 없음.")
+        last_update = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    
+    # 하루가 경과하면 휴면 계정 업데이트 실행
+    if (now - last_update).days >= 1:
+        result = manager.update_dormant_members()
+        if result:
+            print("휴면 계정 업데이트 완료!")
+        else:
+            print("휴면 계정 업데이트 실패 또는 변경 없음.")
+
+        # 다음 자정으로 last_update를 갱신
+        last_update = now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+
 ### 푸터에 들어갈 날짜데이터 (context_processor 사용)
 @app.context_processor
 def inject_full_date():
@@ -22,36 +52,12 @@ def inject_full_date():
     full_date = f"{today} ({weekday})"
     return {"full_date": full_date}
 
-##하루주기로 휴면 회원 자동 전환 
-last_update = None
-@app.before_request
-def check_and_update_dormant_members():
-    global last_update
-    now = datetime.now()
-
-    # 자정 기준으로 업데이트가 될 때
-    if last_update is None:
-        last_update = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    
-    # 최소 실행 간격 설정 (예: 자정마다)
-    if (now - last_update).days >= 1:
-        result = manager.update_dormant_members()
-        if result:
-            print("휴면 계정 업데이트 완료!")
-        else:
-            print("휴면 계정 업데이트 실패 또는 변경 없음.")
-        # 자정을 기준으로 다음날 자정으로 업데이트
-        last_update = now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
-
-
 ### 홈페이지
 @app.route('/')
 def index():
     return render_template('index.html')
 
-
 ### 로그인 기능
-
 ## 로그인 필수 데코레이터
 def login_required(f):
     @wraps(f)
@@ -234,7 +240,7 @@ def toggle_service_permission(userid):
         new_status = not member['can_service']  # 현재 상태의 반대로 설정
         if manager.update_service_permission(userid, new_status):  # DB 업데이트
             if new_status == 0:
-                flash(f'{userid}님의 서비스사용 권한이 차단 되었습니다.', 'success')
+                flash(f'{userid}님의 서비스사용 권한이 차단 되었습니다.', 'danger')
                 return redirect(url_for('can_service_members'))
             else : 
                 flash(f'{userid}님의 서비스사용 권한이 허용 되었습니다.', 'success')
@@ -370,12 +376,15 @@ def rejected_members():
     return render_template('admin_rejected_members.html', members=members, number=number)
 
 #회원탈퇴 회원 목록 보기
-@app.route('/admin/self_delete_member')
+@app.route('/admin/member_management/self_delete_member')
 @admin_required
 def admin_self_delete_members():
     members = manager.get_self_delete_members()
-    numbers = len(members)
-    return render_template('admin_self_delete_members.html', members=members, numbers=numbers)
+    if members is None:
+        members = []
+
+    number = len(members)
+    return render_template('admin_self_delete_members.html', members=members, number=number)
 
 
 ### 회원 페이지

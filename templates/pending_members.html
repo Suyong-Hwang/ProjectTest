@@ -30,9 +30,10 @@
         <!-- 아이콘 (명과 바로 붙도록 margin 제거) -->
         <i class="fas fa-user-clock text-success" style="font-size: 18px;"></i>
     </div>
-    
-    
     <h2 style = "text-align : center;">가입승인 대기 비회원</h2><br>
+    {% if not member %}
+    <h2 style = "text-align : center;">가입승인 대기 비회원이 없습니다</h2><br>
+    {% endif %}
     <div class="row">
         <div class="col-12">
             <table class="table table-bordered table-striped">

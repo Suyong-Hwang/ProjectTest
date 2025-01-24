@@ -44,8 +44,6 @@
                     <td style="text-align:center;">휴면계정활성화</td>
                     <td style="text-align:center;">승인 요청 여부</td>
                     <td style="text-align:center;">가입일자</td>
-                    
-
                 </tr>
             </thead>
             <tbody>
@@ -78,7 +76,7 @@
                         {% if member.approval_status == 'requesting' %}
                             승인 요청중
                         {% else %}
-                            승인 대기중
+                            휴면 상태중
                         {% endif %}
                     </td>
                     <td style="text-align:center;">{{ member.join_date }}</td>

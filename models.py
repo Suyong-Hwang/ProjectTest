@@ -2,6 +2,7 @@ import mysql.connector
 from datetime import datetime
 from flask import session
 
+
 class DBManager:
     def __init__(self):
         self.connection = None
@@ -329,7 +330,8 @@ class DBManager:
         try:
             self.connect()
             sql = "UPDATE members SET last_login = CURDATE() WHERE userid = %s"
-            self.cursor.execute(sql, (userid,))
+            value = (userid,)
+            self.cursor.execute(sql, value)
             self.connection.commit()
         except Exception as error:
             print(f"로그인 시간 갱신 실패: {error}")
@@ -338,14 +340,18 @@ class DBManager:
             self.disconnect()
 
     ## 휴면 회원
-    # 휴면회원으로 변경
+    # 휴면회원으로 변경(현재날짜와 last_login 차이가 90일 이상이고, last_login=null이면 join_date로 대체)
     def update_dormant_members(self):
         try:
             self.connect()
             sql = """
             UPDATE members
             SET role = 'dormant_member', can_service = 0
-            WHERE DATEDIFF(CURRENT_DATE, last_login) >= 90
+            WHERE 
+                (
+                DATEDIFF(CURRENT_DATE, IFNULL(last_login, join_date)) >= 90
+                )
+                AND role != 'admin'
             """
             self.cursor.execute(sql)
             self.connection.commit()
@@ -355,6 +361,7 @@ class DBManager:
             return False
         finally:
             self.disconnect()
+
     
     ## 휴면회원 회원수
     def dormant_member_count(self):
@@ -415,6 +422,7 @@ class DBManager:
             return False
         finally:
             self.disconnect()
+    
     ##서비스 사용 불가 회원의 서비스 사용 승인 신청
     def service_request_approval(self, userid):
         try:
@@ -470,7 +478,7 @@ class DBManager:
             self.connect()
             sql = """
             UPDATE members
-            SET role = %s, can_service = %s, last_login=CURDATE(), approval_status=null
+            SET role = %s, can_service = %s, last_login=CURDATE(), active_approval_status=null
             WHERE userid = %s
             """
             values=(new_role,new_can_service,userid)
@@ -502,14 +510,17 @@ class DBManager:
             self.disconnect()
 
     ## 탈퇴 회원 정보 처리
-    def add_removed_member(self, userid, username,email,last_login,join_date, birthday, removed_by, reason, notes=None):
+    def add_removed_member(self, userid, username, email, last_login, join_date, birthday, removed_by, reason, notes=None):
         try:
             self.connect()
+            
+            # removed_at에 CURDATE()를 명시적으로 설정
             sql = """
-            INSERT INTO removed_members (userid, username, email, last_login,join_date, reason, removed_by, notes, birthday)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO removed_members (userid, username, email, last_login, join_date, reason, removed_by, notes, birthday, removed_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, CURDATE())
             """
-            values = (userid, username, email,last_login,join_date, reason, removed_by, notes, birthday)
+            values = (userid, username, email, last_login, join_date, reason, removed_by, notes, birthday)
+            
             self.cursor.execute(sql, values)
             self.connection.commit()
             print(f"{userid}님의 정보를 removed_members에 저장했습니다")
@@ -519,6 +530,7 @@ class DBManager:
             return False
         finally:
             self.disconnect()
+
 
     #강제탈퇴된 회원목록 가져오기
     def get_admin_removed_members(self):
@@ -550,7 +562,7 @@ class DBManager:
     def get_self_delete_members(self):
         try:
             self.connect()
-            sql = "SELECT * FROM removed_members WHERE removed_by = 'self_inintiated_deletion'"
+            sql = "SELECT * FROM removed_members WHERE removed_by = 'self_initiated_deletion'"
             self.cursor.execute(sql)
             return self.cursor.fetchall()
         except Exception as error:
