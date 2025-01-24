@@ -8,6 +8,17 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div>
+        {% for category, message in messages %}
+        <div class="flash-message {{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
     <div class="container my-5">
         <div class="card text-center">
             <div class="card-header bg-warning text-dark">
@@ -27,7 +38,7 @@
                 </div>
             </div>
             <div class="card-footer text-muted">
-                <p>관리자에게 문의하시려면 <a href="{{ url_for('enqire')}}">문의하기</a>를 눌러주세요.</p>
+                <p>관리자에게 문의하시려면 <a href="{{ url_for('login_enqire')}}">문의하기</a>를 눌러주세요.</p>
             </div>
         </div>
     </div>

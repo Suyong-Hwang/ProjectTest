@@ -405,7 +405,8 @@ def dormant_member_dashboard():
     member = manager.get_dormant_by_id(userid)
     return render_template('dormant_member_dashboard.html', member = member)
 
-#승인버튼 눌리면 관리자페이지에 표시
+
+#휴면 회원이 승인요청버튼 누르면 플래쉬매세지 출력
 @app.route('/active_approve_request', methods=['GET','POST'])
 @login_required
 def active_approve_request():
@@ -426,9 +427,11 @@ def denied_service_member_dashboard(userid):
     
     if request.method == 'POST':
         flash("서비스 활성화 신청이 접수되었습니다. 관리자 승인 대기 중입니다.", "success")
-        return redirect(url_for('dashboard'))  
+    else:
+        flash("서비스 활성화 신청이 실패했습니다. 다시 신청 해주세요", "error")    
+    return redirect(url_for('denied_service_member_dashboard'))  
 
-#승인버튼 눌리면 관리자페이지에 표시
+#서비스 정지 회원이 승인요청 버튼 눌리면 관리자페이지에 표시
 @app.route('/service_approve_request', methods=['GET','POST'])
 @login_required
 def service_approve_request():
@@ -446,11 +449,11 @@ def service_approve_request():
 def self_delete_member(userid):
     #회원탈퇴 페이지 열기
     if request.method == 'GET':
-        member = manager.get_member_by_info(userid)
+        member = manager.get_member_by_id(userid)
         return render_template('self_delete_dashboard.html', member=member, userid=userid)  #회원 탈퇴페이지 열기
     #회원탈퇴 페이지에서 회원탈퇴버튼 눌러서 members에서 데이터 삭제 후 removed_members에 저장
     if request.method == 'POST':
-        member = manager.get_member_by_info(userid) #로그인한 회원 정보 가져오기
+        member = manager.get_member_by_id(userid) #로그인한 회원 정보 가져오기
         userid = member['userid']
         username = member['username']
         email = member['email']
@@ -463,22 +466,65 @@ def self_delete_member(userid):
         removed_by = 'self_initiated_deletion'  # 승인 거부 사유
         manager.add_removed_member(userid, username, email, last_login, join_date, birthday, removed_by, reason, notes)
         manager.delete_member(userid)  # 회원 삭제
-
-    #승인 거부 처리 후, 대기 회원 목록 페이지로 리다이렉트
-    return render_template('complete_deletion.html', userid = userid)
-
+        #승인 거부 처리 후, 대기 회원 목록 페이지로 리다이렉트
+        return render_template('complete_deletion.html', userid = userid)
 
 
 
-#기능소개
+## 기능소개 페이지
+
+#홈페이지에서 기능소개
 @app.route('/feature')
-def feature():
-    return "기능 소개 페이지"
+def index_feature():
+    return render_template("index_feature.html")
 
-#문의하기 
-@app.route('/enqire')
-def enqire():
-    return "문의하기"
+#로그인시 기능소개
+@app.route('/login/feature')
+@login_required
+def login_feature():
+    userid = session['user']
+    member = manager.get_member_by_id(userid) 
+    return render_template("login_feature.html", member = member)
+
+
+## 문의하기 페이지
+#홈페이지에서 문의하기 
+@app.route('/index_enquire', methods=['GET','POST'])
+def index_enquire():
+    if request.method == 'GET':
+        return render_template("index_enquire.html")
+    
+    if request.method == 'POST':
+        email = request.form['email']
+        #회원 이메일과 중복여부
+        if manager.duplicate_email(email):
+            flash('이미 회원 가입된 이메일 입니다.', 'error')
+            return redirect(url_for('index_enquire'))
+        reason = request.form['reason']
+        notes = request.form.get('notes')
+        manager.add_enquire_index(email, reason, notes)
+        flash("문의하기가 관리자에게 전달되었습니다.", 'success')
+        return redirect(url_for('index'))
+
+@app.route('/login_enquire/<userid>', methods=['GET','POST'])
+@login_required
+def login_enquire(userid):
+    if request.method == 'GET':
+        member = manager.get_member_by_id(userid)
+        return render_template("login_enquire.html", member=member)
+    
+    if request.method == 'POST':
+        member = manager.get_member_by_id(userid)
+        username = member['username']
+        email = member['email']
+        reason = request.form['reason']
+        notes = request.form.get('notes')
+        manager.add_enquire_member(userid, username, email, reason, notes)
+        flash("문의하기가 관리자에게 전달되었습니다.", 'success')
+        return redirect(url_for('dashboard'))
+
+
+    
 
 #서비스시작
 @app.route('/start_service')

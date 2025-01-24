@@ -42,10 +42,9 @@
                     <th style="text-align:center;">이메일</th>
                     <th style="text-align:center;">회원상태</th>
                     <td style="text-align:center;">휴면계정활성화</td>
-                    <td style="text-align:center;">승인 요청 여부</td>
+                    <td style="text-align:center;">승인요청</td>
                     <td style="text-align:center;">가입일자</td>
-                    
-
+                    <td style="text-align:center;">마지막로그인</td>
                 </tr>
             </thead>
             <tbody>
@@ -56,32 +55,22 @@
                     <td style="text-align:center;">{{ member.username }}</td>
                     <td style="text-align:center;">{{ member.birthday }}</td>
                     <td style="text-align:center;">{{ member.email }}</td>
-                    <!-- 회원 여부 -->
-                    {% if member.role == 'non_member' %}
-                    <td style="text-align:center;">비회원</td>
-                    {% elif member.role == 'dormant_member' %}
                     <td style="text-align:center;">휴면회원</td>
-                    {% else %}
-                    <td style="text-align:center;">회원</td>
-                    {% endif %}
                     <!-- 휴면 회원 상태 활성화 -->
                     <td style="text-align:center;">
-                        {% if member.role == 'dormant_member' %}
                         <form action="/admin/members/activate/{{ member.userid }}" method="POST" onsubmit="return confirmActive(this)">
                             <!-- member.role 값을 서버로 전송 -->
                             <input type="hidden" name="role" value="{{ member.role }}">
                             <button type="submit" class="btn btn-success">활성화</button>
                         </form>
-                        {% endif %}
                     </td>
                     <td style="text-align:center;">
-                        {% if member.approval_status == 'requesting' %}
-                            승인 요청중
-                        {% else %}
-                            휴면 상태중
-                        {% endif %}
+                        {{"승인 요청중" if member.active_approval_status == 'requesting' else "승인 요청 안함" }}
                     </td>
                     <td style="text-align:center;">{{ member.join_date }}</td>
+                    <td style="text-align:center;">
+                        {{ member.last_login if member.last_login else "로그인기록없음" }}
+                    </td>
                 {% endfor %}
             </tbody>
         </table>

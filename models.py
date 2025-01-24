@@ -29,21 +29,7 @@ class DBManager:
             self.cursor.close()
             self.connection.close()
     
-    ## 선택한 회원 모든 정보 가져오기
-    def get_member_by_info(self, userid):
-        try:
-            self.connect()
-            sql = "SELECT * FROM members WHERE userid = %s"
-            value = (userid,)
-            self.cursor.execute(sql,value)
-            return self.cursor.fetchone()
-        except mysql.connector.Error as error :
-            print(f"데이터베이스 연결 실패: {error}")
-            return None 
-        finally:
-            self.disconnect()
-
-    # 선택한 회원 아이디 가져오기
+    # 선택한 회원 정보 가져오기
     def get_member_by_id(self, userid):
         try:
             self.connect()
@@ -398,7 +384,7 @@ class DBManager:
             sql = "SELECT * FROM members WHERE role = 'dormant_member' and userid = %s"
             value = (userid,)
             self.cursor.execute(sql,value)
-            return self.cursor.fetchall()
+            return self.cursor.fetchone()
         except Exception as error:
             print(f"휴면 회원 정보 조회 실패: {error}")
             return []
@@ -571,7 +557,44 @@ class DBManager:
         finally : 
             self.disconnect()
 
+    ## 홈페이지에서 문의한 내용 저장
+    def add_enquire_index(self, email, reason, notes):
+        try:
+            self.connect()
+            # equires에 CURDATE()를 명시적으로 설정
+            sql = """
+            INSERT INTO enquiries (userid, username, email, reason, notes, enquired_at)
+            VALUES (NULL, NULL, %s, %s, %s, NOW())
+            """
+            values = (email,reason,notes)
+            self.cursor.execute(sql, values)
+            self.connection.commit()
+            print("문의 정보를 저장했습니다")
+            return True
+        except Exception as error:
+            print(f"문의 정보를 저장 실패 : {error}")
+            return False
+        finally:
+            self.disconnect()
 
+    def add_enquire_member(self, userid, username, email, reason, notes):
+        try:
+            self.connect()
+            # equires에 CURDATE()를 명시적으로 설정
+            sql = """
+            INSERT INTO enquiries (userid, username, email, reason, notes, enquired_at)
+            VALUES (%s, %s, %s, %s, %s, NOW())
+            """
+            values = (userid,username,email,reason,notes)
+            self.cursor.execute(sql, values)
+            self.connection.commit()
+            print("문의 정보를 저장했습니다")
+            return True
+        except Exception as error:
+            print(f"문의 정보를 저장 실패 : {error}")
+            return False
+        finally:
+            self.disconnect()
     
     
     

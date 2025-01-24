@@ -43,6 +43,7 @@
                         <th style="text-align:center;width:150px;">생년원일</th>
                         <th style="text-align:center;width:150px;">이메일</th>
                         <th style="text-align:center;width:150px;">서비스사용권한</th>
+                        <th style="text-align:center;width:150px;">승인요청</th>
                         <th style="text-align:center;width:150px;">강제탈퇴</th>
                     </tr>
                 </thead>
@@ -64,6 +65,13 @@
                                     {% endif %}
                                 </button>
                             </form>
+                        </td>
+                        <td style="text-align:center;">
+                        {% if member.service_approval_status %}
+                        승인 요청 중
+                        {% else %}
+                        승인 요청 안함
+                        {% endif %}
                         </td>
                         <td style="text-align:center;">
                             <form action="/admin/remove_member/{{ member.userid }}" method="GET" onsubmit="return confirmDeletion()">
