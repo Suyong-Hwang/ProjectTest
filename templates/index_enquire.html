@@ -5,7 +5,7 @@
 {% block body %}
 <div class="container my-5">
     <h1 class="text-center">문의하기</h1>
-    <form action="{{ url_for('index_enquire') }}" method="POST">
+    <form action="{{ url_for('index_enquire') }}" method="POST" enctype="multipart/form-data"> 
         <!-- 이메일 입력 -->
         <div class="mb-3">
             <label for="email" class="form-label">이메일</label>
@@ -30,6 +30,12 @@
             <textarea class="form-control" id="notes" name="notes" rows="4" required></textarea>
         </div>
         
+        <!-- 파일 첨부 -->
+        <div class="mb-3">
+        <label for="file">파일 첨부:</label>
+        <input type="file" name="file" id="file">
+        </div>
+    
         <!-- 제출 버튼 -->
         <div class="text-center">
             <button type="submit" class="btn btn-primary">문의하기</button>

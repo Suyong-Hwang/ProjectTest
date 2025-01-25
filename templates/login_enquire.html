@@ -19,7 +19,7 @@
 {% block body %}
 <div class="container my-5">
     <h1 class="text-center">문의하기</h1>
-    <form action="{{ url_for('login_enquire', userid=member.userid) }}" method="POST">
+    <form action="{{ url_for('login_enquire', userid=member.userid) }}" method="POST" enctype="multipart/form-data">
         <!-- 문의 사유 선택 -->
         <div class="mb-3">
             <label for="reason" class="form-label">문의 사유</label>
@@ -37,6 +37,12 @@
             <label for="notes" class="form-label">추가 메모 (필수)</label>
             <textarea class="form-control" id="notes" name="notes" rows="4" required></textarea>
         </div>
+
+        <!-- 파일 첨부 -->
+        <div class="mb-3">
+            <label for="file">파일 첨부:</label>
+            <input type="file" name="file" id="file">
+            </div>
         
         <!-- 제출 버튼 -->
         <div class="text-center">

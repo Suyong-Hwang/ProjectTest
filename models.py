@@ -332,7 +332,7 @@ class DBManager:
             self.connect()
             sql = """
             UPDATE members
-            SET role = 'dormant_member', can_service = 0
+            SET role = 'dormant_member'
             WHERE 
                 (
                 DATEDIFF(CURRENT_DATE, IFNULL(last_login, join_date)) >= 90
@@ -558,15 +558,15 @@ class DBManager:
             self.disconnect()
 
     ## 홈페이지에서 문의한 내용 저장
-    def add_enquire_index(self, email, reason, notes):
+    def add_enquire_index(self, email, reason, notes, filename):
         try:
             self.connect()
             # equires에 CURDATE()를 명시적으로 설정
             sql = """
-            INSERT INTO enquiries (userid, username, email, reason, notes, enquired_at)
-            VALUES (NULL, NULL, %s, %s, %s, NOW())
+            INSERT INTO enquiries (userid, username, email, reason, notes, enquired_at, filename)
+            VALUES ('비회원', '비회원', %s, %s, %s, NOW(), %s)
             """
-            values = (email,reason,notes)
+            values = (email,reason,notes, filename)
             self.cursor.execute(sql, values)
             self.connection.commit()
             print("문의 정보를 저장했습니다")
@@ -577,15 +577,16 @@ class DBManager:
         finally:
             self.disconnect()
 
-    def add_enquire_member(self, userid, username, email, reason, notes):
+    ## 로그인 후 문의한 내용 저장
+    def add_enquire_member(self, userid, username, email, reason, notes, filename):
         try:
             self.connect()
             # equires에 CURDATE()를 명시적으로 설정
             sql = """
-            INSERT INTO enquiries (userid, username, email, reason, notes, enquired_at)
-            VALUES (%s, %s, %s, %s, %s, NOW())
+            INSERT INTO enquiries (userid, username, email, reason, notes, enquired_at, filename)
+            VALUES (%s, %s, %s, %s, %s, NOW(), %s)
             """
-            values = (userid,username,email,reason,notes)
+            values = (userid,username,email,reason,notes, filename)
             self.cursor.execute(sql, values)
             self.connection.commit()
             print("문의 정보를 저장했습니다")
@@ -596,8 +597,65 @@ class DBManager:
         finally:
             self.disconnect()
     
+    #회원 문의 정보 가져오기
+    def get_enquired_posts_member(self):
+        try:
+            self.connect()
+            sql="""
+            SELECT * FROM enquiries WHERE userid != '비회원' 
+            """
+            self.cursor.execute(sql)
+            return self.cursor.fetchall()
+        except Exception as error:
+            print(f"회원 문의 정보를 가져오기 실패 : {error}")
+            return False
+        finally:
+            self.disconnect()
     
+    #비회원 문의 정보 가져오기
+    def get_enquired_posts_nonmember(self):
+        try:
+            self.connect()
+            sql="""
+            SELECT * FROM enquiries WHERE userid = '비회원' 
+            """
+            self.cursor.execute(sql)
+            return self.cursor.fetchall()
+        except Exception as error:
+            print(f"회원 문의 정보들 가져오기 실패 : {error}")
+            return False
+        finally:
+            self.disconnect()
     
-    
+    # 문의 상태 업데이트 메서드(같은아이디로 반복해서 문의가 올수 있으므로 아이디,작성시간으로 구분해서 처리)
+    def update_answer_status(self, userid, enquired_at):
+        try: 
+            self.connect()
+            sql = "UPDATE enquiries SET answer_status = 'completion' WHERE userid = %s and enquired_at = %s"
+            value = (userid,enquired_at)
+            self.cursor.execute(sql,value)
+            self.connection.commit()
+            print("답변상태를 업데이트 했습니다.")
+            return True
+        except Exception as error:
+            print(f"답변상태를 업데이트하는데 실패했습니다. : {error}")
+            return False
+        finally:
+            self.disconnect()
+    # 문의한 회원 정보 가져오기
+    def get_enquired_post_by_id(self, userid, enquired_at):
+        try:
+            self.connect()
+            sql="""
+            SELECT * FROM enquiries WHERE userid = %s and enquired_at=%s
+            """
+            value=(userid,enquired_at)
+            self.cursor.execute(sql,value)
+            return self.cursor.fetchone()
+        except Exception as error:
+            print(f"회원 문의 정보 가져오기 실패 : {error}")
+            return False
+        finally:
+            self.disconnect()
 
     

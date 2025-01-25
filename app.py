@@ -12,6 +12,13 @@ app.secret_key = 'your-secret-key'  # 비밀 키 설정, 실제 애플리케이�
 
 manager = DBManager()
 
+
+# 파일 업로드 경로 설정
+app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'uploads')
+# 업로드 폴더가 없으면 생성
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+
 ##하루주기로 휴면 회원 자동 전환 
 
 last_update= None
@@ -418,12 +425,13 @@ def active_approve_request():
         flash("승인 요청 중 오류가 발생했습니다. 다시 시도해주세요.", "error")
     return redirect(url_for('dormant_member_dashboard'))
 
-#로그인 후 서비스 정지 회원이 서비스 정보 눌렀을때
+#로그인 후 서비스 정지 회원이 서비스 복구 신청 눌렀을때
 @app.route('/denied_service_member_dashboard/<userid>', methods=['GET','POST'])
 @login_required
 def denied_service_member_dashboard(userid):
     if request.method == 'GET':
-        return render_template('denied_service_member_dashboard.html',userid=userid)
+        member= manager.get_member_by_id(userid)
+        return render_template('denied_service_member_dashboard.html', member=member)
     
     if request.method == 'POST':
         flash("서비스 활성화 신청이 접수되었습니다. 관리자 승인 대기 중입니다.", "success")
@@ -441,7 +449,7 @@ def service_approve_request():
         flash("승인 요청이 완료되었습니다. 관리자의 승인을 기다려주세요.", "success")
     else:
         flash("승인 요청 중 오류가 발생했습니다. 다시 시도해주세요.", "error")
-    return redirect(url_for('dormant_member_dashboard'))
+    return redirect(url_for('denied_service_member_dashboard', userid= userid))
 
 # 회원 탈퇴하기
 @app.route('/self_delete_member/<userid>', methods=['GET','POST'])
@@ -487,8 +495,8 @@ def login_feature():
     return render_template("login_feature.html", member = member)
 
 
-## 문의하기 페이지
-#홈페이지에서 문의하기 
+### 문의하기 페이지
+##홈페이지에서 문의하기 
 @app.route('/index_enquire', methods=['GET','POST'])
 def index_enquire():
     if request.method == 'GET':
@@ -496,16 +504,23 @@ def index_enquire():
     
     if request.method == 'POST':
         email = request.form['email']
+        file = request.files['file']
+        filename = file.filename if file else None
+        # 파일이 있으면 저장
+        if filename:
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         #회원 이메일과 중복여부
         if manager.duplicate_email(email):
-            flash('이미 회원 가입된 이메일 입니다.', 'error')
+            flash('이미 회원 가입된 이메일 입니다. 로그인해주세요', 'error')
             return redirect(url_for('index_enquire'))
         reason = request.form['reason']
         notes = request.form.get('notes')
-        manager.add_enquire_index(email, reason, notes)
+        manager.add_enquire_index(email, reason, notes, filename)
         flash("문의하기가 관리자에게 전달되었습니다.", 'success')
         return redirect(url_for('index'))
 
+
+##회원페이지에서 문의하기
 @app.route('/login_enquire/<userid>', methods=['GET','POST'])
 @login_required
 def login_enquire(userid):
@@ -517,14 +532,78 @@ def login_enquire(userid):
         member = manager.get_member_by_id(userid)
         username = member['username']
         email = member['email']
+        file = request.files['file']
+        filename = file.filename if file else None
+        # 파일이 있으면 저장
+        if filename:
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         reason = request.form['reason']
         notes = request.form.get('notes')
-        manager.add_enquire_member(userid, username, email, reason, notes)
+        manager.add_enquire_member(userid, username, email, reason, notes, filename)
         flash("문의하기가 관리자에게 전달되었습니다.", 'success')
         return redirect(url_for('dashboard'))
 
+##관리자 페이지에서 문의정보 보기
+##문의된 정보 보기
+@app.route('/admin/admin_management_posts')
+@admin_required
+def admin_management_posts():
+    return render_template("admin_management_posts.html")
 
-    
+
+##회원 문의 정보 보기
+@app.route('/admin/admin_list_posts_member')
+@admin_required
+def admin_list_posts_member():
+    posts = manager.get_enquired_posts_member()
+    number = len(posts)
+    return render_template("admin_list_posts_member.html", posts=posts, number=number)
+
+##비회원 문의 정보 보기
+@app.route('/admin/admin_list_posts_nonmember')
+@admin_required
+def admin_list_posts_nonmember():
+    posts = manager.get_enquired_posts_nonmember()
+    number = len(posts)
+    return render_template("admin_list_posts_nonmember.html", posts=posts, number=number)
+
+## 답변상태 변환하기 
+@app.route('/update_status_member/<userid>', methods=['POST'])
+@admin_required
+def update_answer_status(userid):
+    enquired_at_str = request.form['enquired_at']
+    enquired_at = datetime.strptime(enquired_at_str, '%Y-%m-%d %H:%M:%S')
+    manager.update_answer_status(userid,enquired_at)
+    if userid != '비회원':
+        return redirect(url_for('admin_list_posts_member'))
+    else :
+        return redirect(url_for('admin_list_posts_nonmember'))
+
+#회원 문의사항 상세정보보기
+@app.route('/admin/admin_view_posts_member/<userid>', methods=['POST'])
+@admin_required
+def admin_view_posts_member(userid):
+    enquired_at_str = request.form['enquired_at']
+    enquired_at = datetime.strptime(enquired_at_str, '%Y-%m-%d %H:%M:%S')
+    post = manager.get_enquired_post_by_id(userid,enquired_at)
+    return render_template("admin_view_posts_member.html", post=post)
+
+#비회원 문의사항 상세정보보기
+@app.route('/admin/admin_view_posts_nonmember/<userid>', methods=['POST'])
+@admin_required
+def admin_view_posts_nonmember(userid):
+    enquired_at_str = request.form['enquired_at']
+    enquired_at = datetime.strptime(enquired_at_str, '%Y-%m-%d %H:%M:%S')
+    post = manager.get_enquired_post_by_id(userid,enquired_at)
+    return render_template("admin_view_posts_nonmember.html", post=post)
+
+
+
+
+
+
+
+
 
 #서비스시작
 @app.route('/start_service')

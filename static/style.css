@@ -57,6 +57,8 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    overflow: auto;
+
 }
 
 /* 네비게이션 바가 상단에 고정되도록 설정 */
@@ -131,7 +133,7 @@ body {
 }
 
 footer {
-    position: fixed;
+    position: relative;
     bottom: 0;
     width: 100%;
     background-color: #f1f1f1;
