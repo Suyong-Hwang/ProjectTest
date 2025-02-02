@@ -1,14 +1,17 @@
 {% extends "base.html" %}
-{% block title %}<title>회원페이지</title>{% endblock %}
+{% block title %}<title>회원홈페이지</title>{% endblock %}
 {% block nav %}
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container d-flex justify-content-between align-items-center">
         <a class="navbar-brand" href="{{ url_for('dashboard') }}">알레르기 및 질병 맞춤형 건강기능식품 추천 서비스</a>
         <div style="display: flex; align-items: center;">
             <span style="color:#fff;" class="me-3">환영합니다, {{ member.username }} 님!</span>
-            <a href="/logout" class="btn btn-danger me-2">로그아웃</a>
+            <form action="{{ url_for('update_profile', userid=member.userid) }}" method="GET" class="me-2">
+                <button type="submit" class="btn btn-success">정보수정</button>
+            </form>
+            <a href="/logout" class="btn btn-warning me-2">로그아웃</a>
             <form action="{{ url_for('self_delete_member', userid=member.userid) }}" method="GET" style="margin: 0;">
-                <button type="submit" class="btn btn-warning">회원탈퇴</button>
+                <button type="submit" class="btn btn-danger">회원탈퇴</button>
             </form>
         </div>
     </div>  
@@ -45,10 +48,11 @@
                     <h3 class="card-title">맞춤형 추천 제품</h3>
                     <p class="card-text">당신의 건강을 위한 맞춤형 제품을 확인해 보세요.</p>
                     {% if session['role'] == 'can_service_member' %}
-                    <a href="{{ url_for('start_service') }}" class="btn btn-primary btn-lg">추천 제품 보기</a>
+                    <form action="{{ url_for('start_service',userid=member.userid) }}" method="GET">
+                        <button type="submit" class="btn btn-primary btn-lg">서비스 시작</button>
+                    </form>
                     {% else %}
                     <form action="{{ url_for('denied_service_member_dashboard',userid=member.userid) }}" method="GET">
-                        <!-- member.role 값을 서버로 전송 -->
                         <button type="submit" class="btn btn-success btn-lg">서비스 복구 신청</button>
                     </form>  
                     {% endif %}
@@ -63,7 +67,9 @@
                     <i class="fas fa-history fa-3x text-warning mb-3"></i>
                     <h3 class="card-title">최근 활동</h3>
                     <p class="card-text">최근 로그인 및 활동 내역을 확인할 수 있습니다.</p>
-                    <a href="{{ url_for('dashboard') }}" class="btn btn-warning btn-lg">활동 내역 확인</a>
+                    <form action="{{ url_for('service_history_member',userid=member.userid) }}" method="GET">
+                        <button type="submit" class="btn btn-primary btn-lg">활동 내역 확인</button>
+                    </form>  
                 </div>
             </div>
         </div>

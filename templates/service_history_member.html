@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}
+<title>서비스 이용 내역</title>
+{% endblock %}
+{% block nav %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container d-flex justify-content-between align-items-center">
+        <a class="navbar-brand" href="{{ url_for('dashboard') }}">알레르기 및 질병 맞춤형 건강기능식품 추천 서비스</a>
+        <div style="display: flex; align-items: center;">
+            <span style="color:#fff;" class="me-3">환영합니다, {{ member.username }} 님!</span>
+            <a href="/logout" class="btn btn-danger me-2">로그아웃</a>
+            <form action="{{ url_for('self_delete_member', userid=member.userid) }}" method="GET" style="margin: 0;">
+                <button type="submit" class="btn btn-warning">회원탈퇴</button>
+            </form>
+        </div>
+    </div>  
+</nav>
+{% endblock %}
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-start align-items-center" 
+         style="width: auto; max-width: 270px; font-size: 14px; padding: 6px 10px; 
+                background-color: #e9f7fc; border-radius: 8px; margin-bottom: 15px;">
+        <span style="color: #5a5a5a; margin-right: 10px; letter-spacing: 1px;">서비스 사용 횟수:</span>
+        <span style="font-size: 14px; color: #1e3a8a; font-weight: bold; 
+                     margin-right: 10px; letter-spacing: 1px; min-width: 60px; text-align: right;">
+            {{ number }}번
+        </span>
+        <i class="fas fa-history text-warning" 
+           style="font-size: 16px; color: #1e3a8a; margin-left: 8px;"></i>
+    </div>
+</div>
+<div class="container mt-4">
+    <h2 class="text-center mb-4">최근 서비스 이용 내역</h2>
+    <table class="table table-bordered text-center">
+        <thead class="table-dark">
+            <tr>
+                <th>건강 상태</th>
+                <th>선택한 기능성</th>
+                <th>이용 날짜</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in service_records %}
+            <tr>
+                <td>
+                {% if record.used_service_health_status %}
+                    {% if record.used_service_health_status == "약물" %}
+                    약물복용중
+                    {% elif record.used_service_health_status == "설사" %}
+                    설사
+                    {% elif record.used_service_health_status == "위장 장애" %}
+                    위장 장애
+                    {% elif record.used_service_health_status == "혈당" %}
+                    고혈당/저혈당
+                    {% elif record.used_service_health_status == "알레르기" %}
+                    알레르기
+                    {% elif record.used_service_health_status == "혈액" %}
+                    혈관질환
+                    {% elif record.used_service_health_status == "임산부" %}
+                    임산부
+                    {% elif record.used_service_health_status == "고혈압" %}
+                    고혈압
+                    {% elif record.used_service_health_status == "불면증" %}
+                    불면증
+                    {% elif record.used_service_health_status == "피부" %}
+                    피부질환
+                    {% elif record.used_service_health_status == "간" %}
+                    간질환
+                    {% elif record.used_service_health_status == "두통" %}
+                    두통
+                    {% elif record.used_service_health_status == "당뇨" %}
+                    당뇨
+                    {% endif %}
+                {% else %}
+                해당 사항 없음
+                {% endif %}
+                </td>
+                <td>
+                {% if record.used_service_functionality %}
+                    {% if record.used_service_functionality == "항산화"%}
+                    항산화
+                    {% elif record.used_service_functionality == "소화"%}
+                    소화건강
+                    {% elif record.used_service_functionality == "심혈관"%}
+                    심혈관 건강
+                    {% elif record.used_service_functionality == "피부"%}
+                    피부 건강
+                    {% elif record.used_service_functionality == "체중"%}
+                    체중 관리
+                    {% elif record.used_service_functionality == "기타"%}
+                    기타
+                    {% endif %}
+                {% else %}
+                기능 선택 안함
+                {% endif %}
+                </td>
+                <td>{{ record.used_service_at }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="text-center mt-4">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">홈페이지로 돌아가기</a>
+    </div>
+</div>
+{% endblock %}

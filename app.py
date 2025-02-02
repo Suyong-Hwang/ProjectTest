@@ -1,5 +1,6 @@
 from flask import Flask, session, url_for, render_template, flash, send_from_directory, jsonify ,request, redirect
 import os
+import requests
 from datetime import datetime, timedelta
 from functools import wraps
 from models import DBManager
@@ -18,16 +19,13 @@ app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'uploads')
 # 업로드 폴더가 없으면 생성
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-
 ##하루주기로 휴면 회원 자동 전환 
-
 last_update= None
 @app.before_request
 def check_and_update_dormant_members():
     global last_update #외부에서 선언했기 떄문에 함수안에서 값을 변경하기위해서 global을 사용
     now = datetime.now()
 
-    
     #처음 시작할 때 last_update가 None이면 현재 시간을 자정으로 설정
     if last_update is None:
         result = manager.update_dormant_members()
@@ -36,7 +34,6 @@ def check_and_update_dormant_members():
         else:
             print("휴면 계정 업데이트 실패 또는 변경 없음.")
         last_update = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    
     
     # 하루가 경과하면 휴면 계정 업데이트 실행
     if (now - last_update).days >= 1:
@@ -48,7 +45,7 @@ def check_and_update_dormant_members():
 
         # 다음 자정으로 last_update를 갱신
         last_update = now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
-
+    
 ### 푸터에 들어갈 날짜데이터 (context_processor 사용)
 @app.context_processor
 def inject_full_date():
@@ -58,6 +55,32 @@ def inject_full_date():
     weekday = weekdays[today_date.weekday()]
     full_date = f"{today} ({weekday})"
     return {"full_date": full_date}
+
+
+#members 데이터테이블 생성
+manager.create_members_table()
+
+#members에 관리자계정 생성
+
+manager.create_admin_user()
+
+#removed_members 데이터테이블 생성
+manager.create_removed_members_table()
+
+#enquiries 데이터테이블 생성
+manager.create_enquiries_table()
+
+#기능성식품 데이터테이블 생성
+manager.create_raw_material_table()
+
+#서비스 사용내역 데이터테이블 생성
+manager.create_service_usage_table()
+
+#식품테이블에 오픈API데이터 채우기
+#api_url = 'http://openapi.foodsafetykorea.go.kr/api/c73eb08b363a44b88a78/I-0050/json/1/1'
+
+# 받은 데이터 저장
+# manager.store_raw_material_data(api_url)
 
 ### 홈페이지
 @app.route('/')
@@ -425,6 +448,38 @@ def active_approve_request():
         flash("승인 요청 중 오류가 발생했습니다. 다시 시도해주세요.", "error")
     return redirect(url_for('dormant_member_dashboard'))
 
+#회원 정보 수정 
+@app.route('/update_profile/<userid>', methods=['GET', 'POST'])
+@login_required
+def update_profile(userid):
+    member = manager.get_member_by_id(userid)  # 회원 정보 가져오기
+
+    if request.method == 'POST':
+        # 폼에서 입력한 값 받아오기
+        username = request.form['username'] if request.form['username'] else member.username
+        email = request.form['email'] if request.form['email'] else member.email
+        birthday = request.form['birthday'] if request.form['birthday'] else member.birthday
+        password = request.form['password'] if request.form['password'] else None
+        confirm_password = request.form['confirm_password'] if request.form['confirm_password'] else None
+
+        # 비밀번호가 입력되었으면 확인
+        if password and password == confirm_password:
+            # 비밀번호 업데이트
+            manager.update_password(userid, password)
+
+        # 나머지 정보 업데이트
+        manager.update_member_info(userid, username, email, birthday)
+
+        # 성공 메시지나 다른 페이지로 리디렉션
+        flash('회원 정보가 성공적으로 수정되었습니다.', 'success')
+        return redirect(url_for('dashboard'))
+
+    return render_template('update_profile.html', member=member)
+
+
+
+
+
 #로그인 후 서비스 정지 회원이 서비스 복구 신청 눌렀을때
 @app.route('/denied_service_member_dashboard/<userid>', methods=['GET','POST'])
 @login_required
@@ -598,17 +653,47 @@ def admin_view_posts_nonmember(userid):
     return render_template("admin_view_posts_nonmember.html", post=post)
 
 
-
-
-
-
-
-
-
 #서비스시작
-@app.route('/start_service')
-def start_service():
-    return "서비스 시작 페이지"
+@app.route('/start_service/<userid>', methods=['GET','POST'])
+@login_required
+def start_service(userid):
+    if request.method == 'GET' :
+        member = manager.get_member_by_id(userid)
+        return render_template('start_service.html', member=member)
+    
+    if request.method == 'POST':
+        # POST로 받은 데이터 처리
+        health_status = request.form.getlist('health_status')  # 예시: 체크박스에서 받은 값들
+        functionality_choices = request.form.getlist('product_functionality')  # 예시: 기능성 선택 값들
+
+        # 받은 데이터로 적합한 제품들을 조회하거나 추천하는 로직을 추가
+        # 예시: get_appropriate_products 함수를 사용하여 추천 제품 목록 가져오기
+        products = manager.get_appropriate_products(health_status, functionality_choices)
+        member = manager.get_member_by_id(userid)
+        number = len(products)
+        if not products :
+            products = [] 
+        # # 추천된 제품 목록을 결과로 보여주기
+        used_service_health_status = ', '.join(health_status)  # 예: '심혈관 건강, 피부 건강'
+        used_service_functionality = ', '.join(functionality_choices)  # 예: '항산화, 체중 관리'
+        used_service_at = datetime.now()  # 현재 시간
+
+        try:
+            # DB에 저장하는 메서드 호출
+            manager.save_service_usage(userid, member['username'], used_service_health_status, used_service_functionality, used_service_at)
+        except Exception as error:
+            print(f"서비스 사용 정보 저장 중 오류 발생: {error}")
+        return render_template('product_recommendations.html', products=products , member=member, number=number)
+    
+#서비스 최근 활동 내역 확인하기
+@app.route('/service_history_member/<userid>', methods=['GET'])
+@login_required
+def service_history_member(userid):
+    # DB에서 사용자의 서비스 이용 내역 조회
+    service_records = manager.get_service_usage_by_userid(userid)
+    number = len(service_records)
+    member = manager.get_member_by_id(userid)  # 사용자 정보 가져오기
+    return render_template('service_history_member.html', service_records=service_records, member=member, number=number)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5010, debug=True)
