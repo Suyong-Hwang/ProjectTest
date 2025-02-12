@@ -5,7 +5,7 @@
 {% block nav %}
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-        <a class="navbar-brand" href="{{ url_for('admin_dashboard') }}">알레르기 및 질병 맞춤형 건강기능식품 추천 서비스</a>
+        <a class="navbar-brand" href="{{ url_for('admin_dashboard') }}">질병 맞춤형 건강기능식품 추천 서비스</a>
         <div style="float:right;">
             <span style="color:#fff;" class="me-3">환영합니다, 관리자 님! </span>
             <a href="/logout" class="btn btn-danger">로그아웃</a>
@@ -28,9 +28,10 @@
     </span>
         <i class="fas fa-user-times text-danger" style="font-size: 18px; color: #e60000;"></i>
     </div>    
-    <h2 style = "text-align : center;">서비스 사용 차단 회원 목록</h2><br>
     {% if not members %}
-    <h2 style = "text-align : center">서비스 사용 차단된 회원이 없습니다</h2>
+    <h2 class="text-center" style = "text-align : center">서비스 사용 차단된 회원이 없습니다</h2>
+    {% else %}
+    <h2 class="text-center" style = "text-align : center;">서비스 사용 차단 회원 목록</h2><br>
     {% endif %}
     <div class="row">
         <div class="col-12">
@@ -43,7 +44,7 @@
                         <th style="text-align:center;width:150px;">생년원일</th>
                         <th style="text-align:center;width:150px;">이메일</th>
                         <th style="text-align:center;width:150px;">서비스사용권한</th>
-                        <th style="text-align:center;width:150px;">승인요청</th>
+                        <th style="text-align:center;width:150px;">권한승인요청</th>
                         <th style="text-align:center;width:150px;">강제탈퇴</th>
                     </tr>
                 </thead>
@@ -61,7 +62,7 @@
                                 <input type="hidden" name="can_service" value="{{ member.can_service }}"> 
                                 <button type="submit" class="btn btn-warning btn-sm">
                                     {% if member.can_service == 0 %}
-                                        서비스사용허가
+                                        권한허용하기
                                     {% endif %}
                                 </button>
                             </form>
@@ -75,7 +76,7 @@
                         </td>
                         <td style="text-align:center;">
                             <form action="/admin/remove_member/{{ member.userid }}" method="GET" onsubmit="return confirmDeletion()">
-                                <button type="submit" class="btn btn-danger btn-sm">탈퇴사유작성</button>
+                                <button type="submit" class="btn btn-danger btn-sm">탈퇴시키기</button>
                             </form>
                         </td>
                     </tr>
@@ -96,7 +97,7 @@
 
     // 회원 강퇴 경고창
     function confirmDeletion() {
-        return confirm("정말로 이 회원을 탈퇴시키겠습니까?");
+        return confirm("탈퇴사유 작성 후 회원을 탈퇴시킵니다.");
     }
 </script>
 {% endblock %}

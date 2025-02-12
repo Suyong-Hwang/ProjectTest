@@ -3,12 +3,15 @@
 {% block nav %}
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container d-flex justify-content-between align-items-center">
-        <a class="navbar-brand" href="{{ url_for('dashboard') }}">알레르기 및 질병 맞춤형 건강기능식품 추천 서비스</a>
+        <a class="navbar-brand" href="{{ url_for('dashboard') }}">건강 맞춤형 건강기능식품 추천 서비스</a>
         <div style="display: flex; align-items: center;">
             <span style="color:#fff;" class="me-3">환영합니다, {{ member.username }} 님!</span>
-            <a href="/logout" class="btn btn-danger me-2">로그아웃</a>
+            <form action="{{ url_for('update_profile', userid=member.userid) }}" method="GET" class="me-2">
+                <button type="submit" class="btn btn-success">정보수정</button>
+            </form>
+            <a href="/logout" class="btn btn-warning me-2">로그아웃</a>
             <form action="{{ url_for('self_delete_member', userid=member.userid) }}" method="GET" style="margin: 0;">
-                <button type="submit" class="btn btn-warning">회원탈퇴</button>
+                <button type="submit" class="btn btn-danger">회원탈퇴</button>
             </form>
         </div>
     </div>  
@@ -16,115 +19,142 @@
 {% endblock %}
 {% block body %}
 <div class="container mt-4">
-    <h2 class="text-center mb-4">건강상태 및 기능 선택</h2>
+    <h2 class="text-center mb-4">건강상태와 필요한 제품의 기능을 입력하면 맞춤형 제품을 추천해드립니다.</h2>
     <form action="{{ url_for('start_service', userid=member.userid) }}" method="POST">
         <div class="card shadow-lg border-0 mb-4" style="background: #f2f2f2; border-radius: 15px;">
             <div class="card-body">
-                <h3 class="card-title">1. 건강상태 체크</h3>
-                <p>당신의 건강상태 및 질병, 약물 복용 중일 경우 해당하는 항목을 선택하세요.(중복선택가능)</p>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="약물" id="health-1" name="health_status">
+                <h3 class="card-title">1. {{member.username}} 님의 건강 상태 및 정보를 확인합니다.</h3>
+                {{ member.username }}님의 건강사태와 정보를 선택해주세요.(중복선택가능)<br><br>
+                <!-- 남성 선택 (고정) -->
+                <p class="warning-message">⚠ 성별에 체크가 안되면 서비스가 진행되지 않습니다.</p> <br>
+                1. 성별<br>
+                    {% if member.gender == 'male' %}
+                    <input class="form-check-input" type="checkbox" value="여성" id="health-1" name="health_status" checked required>
                     <label class="form-check-label" for="health-1">
-                        약물복용중
+                    남성
                     </label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="설사" id="health-2" name="health_status">
+                    <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="health-1" name="health_status" value="남성" disabled>
+                    <label class="form-check-label" for="health-1">
+                    여성
+                    </label>
+                    </div>
+                    {% else %}
+                    <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="health-1" name="health_status" value="여성" disabled>
+                    <label class="form-check-label" for="health-1">
+                    남성
+                    </label>
+                    </div>
+                    <input class="form-check-input" type="checkbox" value="남성" id="health-1" name="health_status" checked required>
+                    <label class="form-check-label" for="health-1">
+                    여성
+                    </label>
+                    {% endif %}
+                    {% if member.gender == 'female' %}
+                    <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="임산부" id="health-2" name="health_status">
                     <label class="form-check-label" for="health-2">
-                        설사
+                    임산부 및 수유부
                     </label>
-                </div>
+                    </div>
+                    {% endif %}
+                2. 수술이력
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="위장 장애" id="health-3" name="health_status">
+                    <input class="form-check-input" type="checkbox" value="수술" id="health-3" name="health_status">
                     <label class="form-check-label" for="health-3">
-                        위장 장애
+                        최근 수술 이력/수술예정 
                     </label>
                 </div>
+                3. 혈당 질환
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" value="혈당" id="health-4" name="health_status">
                     <label class="form-check-label" for="health-4">
-                        고혈당/저혈당
+                        저혈당/고혈당
                     </label>
                 </div>
+                5. 혈압 질환
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="알레르기" id="health-5" name="health_status">
+                    <input class="form-check-input" type="checkbox" value="혈압" id="health-5" name="health_status">
                     <label class="form-check-label" for="health-5">
-                        알레르기
+                        저혈압/고혈압
                     </label>
                 </div>
+                6. 혈관 질환
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="혈액" id="health-5" name="health_status">
+                    <input class="form-check-input" type="checkbox" value="혈액" id="health-6" name="health_status">
                     <label class="form-check-label" for="health-6">
-                        혈관질환
+                        혈관질환(동맥질환, 정맥질환, 모세혈관질환 등)
                     </label>
                 </div>
+                7. 당뇨 환자
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="임산부" id="health-5" name="health_status">
+                    <input class="form-check-input" type="checkbox" value="당뇨" id="health-7" name="health_status">
                     <label class="form-check-label" for="health-7">
-                        임산부
+                        당뇨환자
                     </label>
                 </div>
+                7. 간 질환
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="비만" id="health-5" name="health_status">
+                    <input class="form-check-input" type="checkbox" value="간" id="health-8" name="health_status">
                     <label class="form-check-label" for="health-8">
-                        고혈압
+                        간 질환(간염, 간경변, 비알콜성 지방간, 알콜성 간질환, 간암, 급성 간부전 등)이 있으시면 체크
                     </label>
                 </div>
+                8. 설사
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="불면증" id="health-5" name="health_status">
+                    <input class="form-check-input" type="checkbox" value="설사" id="health-9" name="health_status">
                     <label class="form-check-label" for="health-9">
-                        불면증
+                        설사 증상이 있으시면 체크
                     </label>
                 </div>
+                9. 위장 장애
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="피부" id="health-5" name="health_status">
+                    <input class="form-check-input" type="checkbox" value="위장" id="health-10" name="health_status">
                     <label class="form-check-label" for="health-10">
-                        피부질환
-                    </label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="간" id="health-5" name="health_status">
-                    <label class="form-check-label" for="health-11">
-                        간질환
-                    </label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="두통" id="health-5" name="health_status">
-                    <label class="form-check-label" for="health-12">
-                        두통
-                    </label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="당뇨" id="health-2" name="health_status">
-                    <label class="form-check-label" for="health-13">
-                        당뇨
+                        위장 장애(소화불량,위장장애,메스꺼움,위산 역류 등)
                     </label>
                 </div>
             </div>
         </div>
-
         <div class="card shadow-lg border-0 mb-4" style="background: #f2f2f2; border-radius: 15px;">
             <div class="card-body">
-                <h3 class="card-title">2. 기능성식품 기능 선택</h3>
-                <p>필요한 기능성식품을 선택하세요.(중복선택가능)</p>
+                <h3 class="card-title">2. 건강기능식품 원재료의 기능 선택</h3>
+                <p>{{ member.username }}님께 필요한 기능성식품의 기능을 선택하세요.(중복선택가능)</p>
+                <p class="warning-message">⚠ 미 선택시 전체 제품 중 
+                        {% if member.gender == 'male' %}
+                            여성
+                        {% else %}
+                            남성
+                        {% endif %}
+                에 대한 건강기능 제품만 제외 됩니다.</p>
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="항산화" id="functionality-1" name="product_functionality">
+                    <input class="form-check-input" type="checkbox" value="체지방" id="functionality-1" name="product_functionality">
                     <label class="form-check-label" for="functionality-1">
-                        항산화
+                        체중 관리
                     </label>
                 </div>
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="소화" id="functionality-2" name="product_functionality">
+                    <input class="form-check-input" type="checkbox" value="간" id="functionality-2" name="product_functionality">
                     <label class="form-check-label" for="functionality-2">
-                        소화건강
+                        간 건강
                     </label>
                 </div>
+                {% if member.gender == 'male' %}
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="심혈관" id="functionality-3" name="product_functionality">
+                    <input class="form-check-input" type="checkbox" value="갱년기 남성" id="functionality-3" name="product_functionality">
                     <label class="form-check-label" for="functionality-3">
-                        심혈관 건강
+                        갱년기 건강관리
                     </label>
                 </div>
+                {% else %}
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="갱년기 여성" id="functionality-3" name="product_functionality">
+                    <label class="form-check-label" for="functionality-3">
+                        갱년기 건강관리
+                    </label>
+                </div>
+                {% endif %}
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" value="피부" id="functionality-4" name="product_functionality">
                     <label class="form-check-label" for="functionality-4">
@@ -132,32 +162,120 @@
                     </label>
                 </div>
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="피로" id="functionality-5" name="product_functionality">
+                    <input class="form-check-input" type="checkbox" value="눈" id="functionality-5" name="product_functionality">
                     <label class="form-check-label" for="functionality-5">
-                        피로 건강
+                        눈 건강
                     </label>
                 </div>
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="체중" id="functionality-5" name="product_functionality">
+                    <input class="form-check-input" type="checkbox" value="관절" id="functionality-6" name="product_functionality">
                     <label class="form-check-label" for="functionality-6">
-                        체중 관리
+                        관절 및 연골 건강
                     </label>
                 </div>
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="기타" id="functionality-5" name="product_functionality">
+                    <input class="form-check-input" type="checkbox" value="근력" id="functionality-7" name="product_functionality">
                     <label class="form-check-label" for="functionality-7">
-                        기타
+                        근력 강화
                     </label>
                 </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="기억력" id="functionality-8" name="product_functionality">
+                    <label class="form-check-label" for="functionality-8">
+                        기억력 개선
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="인지기능" id="functionality-9" name="product_functionality">
+                    <label class="form-check-label" for="functionality-9">
+                        인지 기능 개선
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="면역기능" id="functionality-10" name="product_functionality">
+                    <label class="form-check-label" for="functionality-10">
+                        면역력 개선
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="면역과민반응" id="functionality-11" name="product_functionality">
+                    <label class="form-check-label" for="functionality-11">
+                        알레르기반응(면역과민방응)에 의한 코상태 개선
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="모발" id="functionality-12" name="product_functionality">
+                    <label class="form-check-label" for="functionality-12">
+                        모발상태 개선
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="배변" id="functionality-13" name="product_functionality">
+                    <label class="form-check-label" for="functionality-13">
+                        배변활동 개선
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="수면" id="functionality-14" name="product_functionality">
+                    <label class="form-check-label" for="functionality-14">
+                        수면 개선
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="혈당" id="functionality-15" name="product_functionality">
+                    <label class="form-check-label" for="functionality-15">
+                        혈당 관리
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="혈중" id="functionality-16" name="product_functionality">
+                    <label class="form-check-label" for="functionality-16">
+                        혈중 지질 개선(중성지방,콜레스테롤)
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="키성장" id="functionality-17" name="product_functionality">
+                    <label class="form-check-label" for="functionality-17">
+                        어린이 키성장
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="운동수행능력" id="functionality-18" name="product_functionality">
+                    <label class="form-check-label" for="functionality-18">
+                        운동수행능력 향상
+                    </label>
+                </div>
+                {% if member.gender == 'male' %}
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="전립선" id="functionality-19" name="product_functionality">
+                    <label class="form-check-label" for="functionality-19">
+                        전립선
+                    </label>
+                </div>
+                {% endif %}
             </div>
         </div>
-
         <div class="text-center">
-            <button type="submit" class="btn btn-primary btn-lg">추천 제품 보기</button>
-            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-lg">홈페이지</a>
+            <button type="submit" class="btn btn-primary btn-lg">추천제품보기</button>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-lg">서비스종료</a>
         </div>
     </form>
     <div class="container mt-4">
     </div>
 </div>
+<style>
+.warning-message {
+    color: #D8000C;  /* 강한 빨간색 */
+    background-color: #FFD2D2;  /* 연한 빨간색 배경 */
+    border: 1px solid #D8000C;  /* 테두리 추가 */
+    padding: 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    display: inline-block;
+}
+
+.female{
+    color: black;
+}
+</style>
 {% endblock %}

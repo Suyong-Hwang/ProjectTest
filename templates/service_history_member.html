@@ -5,12 +5,15 @@
 {% block nav %}
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container d-flex justify-content-between align-items-center">
-        <a class="navbar-brand" href="{{ url_for('dashboard') }}">알레르기 및 질병 맞춤형 건강기능식품 추천 서비스</a>
+        <a class="navbar-brand" href="{{ url_for('dashboard') }}">개인 맞춤형 건강기능식품 추천 서비스</a>
         <div style="display: flex; align-items: center;">
             <span style="color:#fff;" class="me-3">환영합니다, {{ member.username }} 님!</span>
-            <a href="/logout" class="btn btn-danger me-2">로그아웃</a>
+            <form action="{{ url_for('update_profile', userid=member.userid) }}" method="GET" class="me-2">
+                <button type="submit" class="btn btn-success">정보수정</button>
+            </form>
+            <a href="/logout" class="btn btn-warning me-2">로그아웃</a>
             <form action="{{ url_for('self_delete_member', userid=member.userid) }}" method="GET" style="margin: 0;">
-                <button type="submit" class="btn btn-warning">회원탈퇴</button>
+                <button type="submit" class="btn btn-danger">회원탈퇴</button>
             </form>
         </div>
     </div>  
@@ -18,90 +21,181 @@
 {% endblock %}
 {% block body %}
 <div class="container mt-4">
-    <div class="d-flex justify-content-start align-items-center" 
-         style="width: auto; max-width: 270px; font-size: 14px; padding: 6px 10px; 
-                background-color: #e9f7fc; border-radius: 8px; margin-bottom: 15px;">
-        <span style="color: #5a5a5a; margin-right: 10px; letter-spacing: 1px;">서비스 사용 횟수:</span>
-        <span style="font-size: 14px; color: #1e3a8a; font-weight: bold; 
-                     margin-right: 10px; letter-spacing: 1px; min-width: 60px; text-align: right;">
-            {{ number }}번
-        </span>
-        <i class="fas fa-history text-warning" 
-           style="font-size: 16px; color: #1e3a8a; margin-left: 8px;"></i>
+    <div class="d-flex flex-wrap align-items-center">
+        <div class="d-flex align-items-center" 
+             style="width: auto; max-width: 270px; font-size: 14px; padding: 6px 10px; 
+                    background-color: #e9f7fc; border-radius: 8px; margin-right: 15px;">
+            <span style="color: #5a5a5a; margin-right: 10px; letter-spacing: 1px;">서비스 사용 횟수:</span>
+            <span style="font-size: 14px; color: #1e3a8a; font-weight: bold; 
+                         margin-right: 10px; letter-spacing: 1px; min-width: 60px; text-align: right;">
+                {{ number }}번
+            </span>
+            <i class="fas fa-history text-warning" 
+               style="font-size: 16px; color: #1e3a8a; margin-left: 8px;"></i>
+        </div>
+
+        <div class="d-flex align-items-center" 
+             style="width: auto;  font-size: 14px; padding: 6px 10px; 
+                    background-color: #e9f7fc; border-radius: 8px;">
+            <span style="color: #5a5a5a; margin-right: 10px; letter-spacing: 1px;">최근 로그인 날짜:</span>
+            <span style="font-size: 14px; color: #1e3a8a; font-weight: bold; 
+                         margin-right: 10px; letter-spacing: 1px; min-width: 60px; text-align: right;">
+                {{ member.last_login }}
+            </span>
+            <i class="fas fa-sign-in-alt text-warning" 
+               style="font-size: 16px; color: #1e3a8a; margin-left: 8px;"></i>
+        </div>
     </div>
 </div>
+
 <div class="container mt-4">
     <h2 class="text-center mb-4">최근 서비스 이용 내역</h2>
-    <table class="table table-bordered text-center">
-        <thead class="table-dark">
-            <tr>
-                <th>건강 상태</th>
-                <th>선택한 기능성</th>
-                <th>이용 날짜</th>
-            </tr>
-        </thead>
-        <tbody>
+    <div class="container mt-4">
+        <div class="row">
             {% for record in service_records %}
-            <tr>
-                <td>
-                {% if record.used_service_health_status %}
-                    {% if record.used_service_health_status == "약물" %}
-                    약물복용중
-                    {% elif record.used_service_health_status == "설사" %}
-                    설사
-                    {% elif record.used_service_health_status == "위장 장애" %}
-                    위장 장애
-                    {% elif record.used_service_health_status == "혈당" %}
-                    고혈당/저혈당
-                    {% elif record.used_service_health_status == "알레르기" %}
-                    알레르기
-                    {% elif record.used_service_health_status == "혈액" %}
-                    혈관질환
-                    {% elif record.used_service_health_status == "임산부" %}
-                    임산부
-                    {% elif record.used_service_health_status == "고혈압" %}
-                    고혈압
-                    {% elif record.used_service_health_status == "불면증" %}
-                    불면증
-                    {% elif record.used_service_health_status == "피부" %}
-                    피부질환
-                    {% elif record.used_service_health_status == "간" %}
-                    간질환
-                    {% elif record.used_service_health_status == "두통" %}
-                    두통
-                    {% elif record.used_service_health_status == "당뇨" %}
-                    당뇨
-                    {% endif %}
-                {% else %}
-                해당 사항 없음
-                {% endif %}
-                </td>
-                <td>
-                {% if record.used_service_functionality %}
-                    {% if record.used_service_functionality == "항산화"%}
-                    항산화
-                    {% elif record.used_service_functionality == "소화"%}
-                    소화건강
-                    {% elif record.used_service_functionality == "심혈관"%}
-                    심혈관 건강
-                    {% elif record.used_service_functionality == "피부"%}
-                    피부 건강
-                    {% elif record.used_service_functionality == "체중"%}
-                    체중 관리
-                    {% elif record.used_service_functionality == "기타"%}
-                    기타
-                    {% endif %}
-                {% else %}
-                기능 선택 안함
-                {% endif %}
-                </td>
-                <td>{{ record.used_service_at }}</td>
-            </tr>
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">📌 이용 기록</h5>
+                        <!-- 이용 날짜 -->
+                        <p><strong>이용 날짜:</strong> {{ record.used_service_at }}</p>
+                        <!-- 회원 건강 상태 -->
+                        <p><strong>회원 정보 및 건강 상태:</strong></p>
+                        <ul>
+                            {% for status in record.used_service_health_status.split(',') %}
+                            <li>
+                                {% if status == "남성" %}
+                                성별 : 여성 <br> 건강상태 : 
+                                {% elif status == "여성" %}
+                                성별 : 남성 <br> 건강상태 : 
+                                {% elif status == "임산부" %}
+                                임산부 및 수유부
+                                {% elif status == "수술" %}
+                                최근 수술 이력/수술할 예정
+                                {% elif status == "혈당" %}
+                                저혈당/고혈당
+                                {% elif status == "혈압" %}
+                                저혈압/고혈압
+                                {% elif status == "혈액" %}
+                                혈관질환(동맥질환, 정맥질환, 모세혈관질환 등)
+                                {% elif status == "당뇨" %}
+                                당뇨
+                                {% elif status == "간 질환" %}
+                                간 질환
+                                {% elif status == "설사" %}
+                                설사
+                                {% elif status == "위장" %}
+                                위장 장애(소화불량, 위장장애, 메스꺼움, 위산 역류 등)
+                                {% endif %}
+                                
+                            </li>
+                            {% endfor %}
+                        </ul>
+    
+                        <!-- 선택한 기능성 -->
+                        <p><strong>선택한 기능성:</strong></p>
+                        <ul>
+                            {% if record.used_service_functionality %}
+                            {% for func in record.used_service_functionality.split(',') %}
+                            
+                            <li>
+                                {% if func == "체지방" %}
+                                체중 관리
+                                {% elif func == "간" %}
+                                간 건강
+                                {% elif func == "갱년기 남성" %}
+                                갱년기
+                                {% elif func == "갱년기 여성" %}
+                                갱년기
+                                {% elif func == "피부" %}
+                                피부 건강
+                                {% elif func == "눈" %}
+                                눈 건강
+                                {% elif func == "관절" %}
+                                관절 및 연골 건강
+                                {% elif func == "근력" %}
+                                근력 강화
+                                {% elif func == "기억력" %}
+                                기억력 개선
+                                {% elif func == "인지기능" %}
+                                인지 기능 개선
+                                {% elif func == "면역기능" %}
+                                면역력 개선
+                                {% elif func == "면역과민반응" %}
+                                알레르기반응(면역과민반응)에 의한 코상태 개선
+                                {% elif func == "모발" %}
+                                모발상태 개선
+                                {% elif func == "배변" %}
+                                배변활동 개선
+                                {% elif func == "수면" %}
+                                수면 개선
+                                {% elif func == "혈당" %}
+                                혈당 관리
+                                {% elif func == "혈중" %}
+                                혈중 지질 개선(중성지방, 콜레스테롤)
+                                {% elif func == "키성장" %}
+                                어린이 키성장
+                                {% elif func == "운동수행능력" %}
+                                운동수행능력 향상
+                                {% elif func == "전립선" %}
+                                전립선 건강
+                                {% endif %}
+                            </li>
+                            {% endfor %}
+                            {% endif %}
+                        </ul>
+    
+                    </div>
+                </div>
+            </div>
             {% endfor %}
-        </tbody>
-    </table>
+        </div>
+    </div>
+    
     <div class="text-center mt-4">
         <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">홈페이지로 돌아가기</a>
     </div>
+    <div class="container mt-4">
+    </div>
 </div>
+<style>
+.card {
+    border-radius: 10px;
+    padding: 15px;
+    background-color: #fff;
+    transition: 0.3s;
+    width : 600px;
+    height : 1500px;
+    margin-top : 20px;
+    margin-bottom : 40px;
+}
+
+.card-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #1e3a8a;
+    margin-bottom: 10px;
+}
+
+.card p {
+    font-size: 16px;
+    color: #555;
+}
+
+.card ul {
+    padding-left: 20px;
+    list-style-type: none;
+}
+
+.card li {
+    background: #f8f9fa;
+    padding: 5px 10px;
+    border-radius: 5px;
+    margin-bottom: 5px;
+}
+
+.card:hover {
+    box-shadow: 3px 3px 15px rgba(0, 0, 0, 0.2);
+}
+</style>
 {% endblock %}

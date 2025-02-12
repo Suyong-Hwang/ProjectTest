@@ -1,16 +1,20 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+
 {% block title %}
 <title>추천 제품 목록</title>
 {% endblock %}
 {% block nav %}
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container d-flex justify-content-between align-items-center">
-        <a class="navbar-brand" href="{{ url_for('dashboard') }}">알레르기 및 질병 맞춤형 건강기능식품 추천 서비스</a>
+        <a class="navbar-brand" href="{{ url_for('dashboard') }}">개인 맞춤형 건강기능식품 추천 서비스</a>
         <div style="display: flex; align-items: center;">
             <span style="color:#fff;" class="me-3">환영합니다, {{ member.username }} 님!</span>
-            <a href="/logout" class="btn btn-danger me-2">로그아웃</a>
+            <form action="{{ url_for('update_profile', userid=member.userid) }}" method="GET" class="me-2">
+                <button type="submit" class="btn btn-success">정보수정</button>
+            </form>
+            <a href="/logout" class="btn btn-warning me-2">로그아웃</a>
             <form action="{{ url_for('self_delete_member', userid=member.userid) }}" method="GET" style="margin: 0;">
-                <button type="submit" class="btn btn-warning">회원탈퇴</button>
+                <button type="submit" class="btn btn-danger">회원탈퇴</button>
             </form>
         </div>
     </div>  
@@ -18,52 +22,149 @@
 {% endblock %}
 {% block body %}
 <div class="container mt-4">
-    <div class="d-flex justify-content-start align-items-center" 
+    <div class="text-center mt-4">
+        <a href="{{ url_for('start_service', userid=member.userid) }}" class="btn btn-primary">이전 페이지</a>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">서비스 종료</a>
+    </div>
+    <br>
+    {% if not products %}
+    <h2 class="text-center">서비스에 등록된 제품이 없습니다.</h2>
+    {% else %}
+    <h2 class="text-center">맞춤형 추천 건강기능식품 원재료 정보 및 제품 목록</h2>
+    <div class="d-flex justify-content-start align-items-center mt-3" 
          style="width: auto; max-width: 240px; font-size: 14px; padding: 6px 10px; 
-                background-color: #e9f7fc; border-radius: 8px; margin-bottom: 15px;">
+                background-color: #e9f7fc; border-radius: 8px;">
         <span style="color: #5a5a5a; margin-right: 10px; letter-spacing: 1px;">추천 제품 수:</span>
         <span style="font-size: 14px; color: #1e3a8a; font-weight: bold; 
                      margin-right: 10px; letter-spacing: 1px; min-width: 60px; text-align: right;">
             {{ number }}개
         </span>
-        <i class="fas fa-capsules text-primary" 
-           style="font-size: 16px; color: #1e3a8a; margin-left: 8px;"></i>
+        <i class="fas fa-capsules text-primary" style="font-size: 16px; color: #1e3a8a; margin-left: 8px;"></i>
     </div>
-    <h2 style="text-align:center;">추천 제품 정보</h2><br>
-    
-    {% if not products %}
-        <h2 style="text-align:center;">추천 제품이 없습니다.</h2>
+    <br>
+    <div class="row">
+        {% for product in products %}
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-lg border-0" style="background: #f2f2f2; border-radius: 15px; position: relative;">
+                <div class="card-body">
+                    <!-- 제품 이름 -->
+                    <h4 class="card-title">{{ product.edited_name }}</h4>
+                    <!-- 이미지 -->
+                    <img src="{{ url_for('static', filename='images/product_images/' + product.edited_name + '.png') }}" alt="{{ product.edited_name }} 이미지" style="border-radius: 10px; width: 380px; height: 350px; object-fit: cover; margin-bottom:10px;">
+                    <!-- 1일 섭취량 상한선 -->
+                    <p class="card-text"><strong>1일 섭취량 상한선:</strong> {{ product.daily_intake_upper_limit }}</p>
+                    <!-- 주의 사항 -->
+                    <p class="card-text"><strong>주의 사항:<br></strong> {{ product.cautionary_information }}</p>
+                    <!-- 기능성 -->
+                    <p class="card-text"><strong>기능성:<br></strong> {{ product.edited_functionality }}</p>
+                </div>
+                <div class="card-footer d-flex" style="margin-top: auto;">
+                    <div style="flex-grow: 1;">
+                        {%if product.link %}
+                        <a href="{{ product.link }}"
+                        class="btn btn-coupang" 
+                        target="_blank" 
+                        style="height: 50px; display: flex; align-items: center; justify-content: center;">
+                        제품 찾기
+                        </a>
+                        {% else %}   
+                        <p class="card-text" style="font-size: 25px;">
+                        <strong>
+                        제품 개발중
+                        </strong>
+                        </p>
+                        {% endif %}    
+                    </div>
+                </div>
+            </div>  
+        </div>
+        {% endfor %}
+    </div>
     {% endif %}
-    
-    <div class="table-responsive">
-        <table class="table table-striped table-hover">
-            <thead class="table-dark">
-                <tr>
-                    <th style="text-align:center;">번호</th>
-                    <th style="text-align:center;">원재료명</th>
-                    <th style="text-align:center;">하루 섭취 상한선</th>
-                    <th style="text-align:center;">주의사항</th>
-                    <th style="text-align:center;">주된 기능성</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for product in products %}
-                <tr>
-                    <td style="text-align:center;">{{ loop.index }}</td>
-                    <td style="text-align:center;">{{ product.raw_material_name }}</td>
-                    <td style="text-align:center;">{{ product.daily_intake_upper_limit }}</td>
-                    <td style="text-align:center;">{{ product.cautionary_information }}</td>
-                    <td style="text-align:center;">{{ product.primary_functionality }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>  
-        <div class="text-center mt-4">
-            <a href="{{ url_for('start_service',userid=member.userid) }}" class="btn btn-primary">선택페이지</a>
-            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">홈페이지</a>
-        </div>
-        <div class="container mt-4">
-        </div>
-    </div>
 </div>
+<style>
+
+body {
+    font-family: 'Noto Sans KR', sans-serif;
+    }
+.card-title {
+    font-family: 'Noto Sans KR', sans-serif;
+    font-weight: 700;
+    color: #00897b; /* 네이비 계열 - 신뢰감 */
+    }
+
+.card-text {
+    font-family: 'Noto Sans KR', sans-serif;
+    font-weight: 400;
+    color: #444; /* 본문 가독성 유지 */
+    }
+
+.card-text strong {
+    color: #ff5722; /* 주의사항 같은 중요한 부분 강조 */
+    }
+
+/* 카드에 최소 높이 설정 */
+.card {
+    width : 430px;
+    min-height: 1000px; /* 카드의 최소 높이를 설정해서 내용이 짧아지지 않도록 보장 */
+    display: flex;
+    flex-direction: column; /* 내용과 버튼을 세로로 배치 */
+}
+
+/* 카드 본문 영역 */
+.card-body {
+    flex-grow: 1; /* 카드 본문이 가능한 공간을 모두 차지하도록 설정 */
+    padding-bottom: 40px; /* 버튼이 가리지 않도록 여유 공간 추가 */
+}
+
+/* 카드 하단에 버튼을 고정 */
+.card-footer {
+    position: absolute;
+    bottom: 20px; /* 카드의 하단에 고정 */
+    width: 100%; /* 카드 전체 너비 */
+    padding: 0 20px; /* 카드 테두리와 버튼 사이의 여백 */
+    text-align: center;
+}
+
+/* 버튼 기본 스타일 */
+.card-footer .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto; /* 버튼의 너비를 자동으로 설정 */
+    padding: 12px 24px; /* 버튼 패딩 */
+    margin-bottom: 10px; /* 버튼 간의 간격 */
+    border-radius: 30px; /* 둥근 모서리 */
+    font-size: 16px; /* 글자 크기 */
+    font-weight: bold; /* 글자 두껍게 */
+    text-transform: uppercase; /* 대문자 */
+    transition: all 0.3s ease; /* 부드러운 전환 효과 */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* 부드러운 그림자 */
+    text-decoration: none; /* 링크의 기본 밑줄 제거 */
+}
+
+/* 쿠팡 버튼 스타일 */
+.btn-coupang {
+    background: linear-gradient(90deg, #ff9900, #ff6600); /* 그라디언트 배경 */
+    margin-top : 10px;
+    color: white;
+}
+
+.btn-coupang:hover {
+    background: linear-gradient(90deg, #ff6600, #ff9900); /* 호버 시 반전된 그라디언트 */
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2); /* 호버 시 그림자 강화 */
+}
+
+/* 네이버 버튼 스타일 */
+.btn-naver {
+    background: linear-gradient(90deg, #00c73c, #009e2f); /* 그라디언트 배경 */
+    color: white;
+}
+
+.btn-naver:hover {
+    background: linear-gradient(90deg, #009e2f, #00c73c); /* 호버 시 반전된 그라디언트 */
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2); /* 호버 시 그림자 강화 */
+}
+    
+</style>
 {% endblock %}

@@ -5,12 +5,15 @@
 {% block nav %}
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container d-flex justify-content-between align-items-center">
-        <a class="navbar-brand" href="{{ url_for('dashboard') }}">알레르기 및 질병 맞춤형 건강기능식품 추천 서비스</a>
+        <a class="navbar-brand" href="{{ url_for('dashboard') }}">개인 맞춤형 건강기능식품 추천 서비스</a>
         <div style="display: flex; align-items: center;">
             <span style="color:#fff;" class="me-3">환영합니다, {{ member.username }} 님!</span>
-            <a href="/logout" class="btn btn-danger me-2">로그아웃</a>
+            <form action="{{ url_for('update_profile', userid=member.userid) }}" method="GET" class="me-2">
+                <button type="submit" class="btn btn-success">정보수정</button>
+            </form>
+            <a href="/logout" class="btn btn-warning me-2">로그아웃</a>
             <form action="{{ url_for('self_delete_member', userid=member.userid) }}" method="GET" style="margin: 0;">
-                <button type="submit" class="btn btn-warning">회원탈퇴</button>
+                <button type="submit" class="btn btn-danger">회원탈퇴</button>
             </form>
         </div>
     </div>  
@@ -18,7 +21,7 @@
 {% endblock %}
 {% block body %}
 <div class="container my-5">
-    <h1 class="text-center">문의하기</h1>
+    <h2 class="text-center">문의하기</h2>
     <form action="{{ url_for('login_enquire', userid=member.userid) }}" method="POST" enctype="multipart/form-data">
         <!-- 문의 사유 선택 -->
         <div class="mb-3">
@@ -47,6 +50,7 @@
         <!-- 제출 버튼 -->
         <div class="text-center">
             <button type="submit" class="btn btn-primary">문의하기</button>
+            <a class="btn btn-secondary" href="{{ url_for('dashboard') }}">홈페이지</a>
         </div>
     </form>
 </div>

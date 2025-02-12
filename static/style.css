@@ -1,3 +1,16 @@
+:root {
+    --primary-bg: #f5f2eb; /* 부드러운 베이지 톤 */
+    --secondary-bg: #eae4d3; /* 따뜻한 크림색 */
+    --accent-color: #d4b896; /* 고급스러운 브라운 베이지 */
+    --text-color: #5a4a42; /* 부드러운 다크 브라운 */
+    --button-bg: #c4a484; /* 버튼 색상 */
+    --button-hover-bg: #b49276; /* 버튼 호버 색상 */
+    --border-radius: 12px; /* 둥근 모서리 */
+    --box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.1); /* 부드러운 그림자 */
+    --header-footer-bg: #8d7763; /* 기존 검은색보다 부드러운 브라운 톤 */
+    --header-footer-text: #f5f2eb; /* 밝은 텍스트 색상 */
+}
+
 img { 
     border: 2px solid #999; 
     border-radius: 10px; 
@@ -78,6 +91,7 @@ body {
     padding-top: 50px; /* 상단 간격 조정 */
     padding-top: 60px; /* 네비게이션 바 아래에 여백 추가 */
 }
+
 
 .login-card, .signup-card {
     background-color: #fff;
@@ -218,4 +232,50 @@ footer {
     border-spacing: 0;
     border-radius: 15px;
     overflow: hidden;
+}
+
+   h2.text-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    text-align: center;
+    padding: 20px;
+    margin-bottom: 20px;
+    
+    /* 배경 스타일 */
+    background: linear-gradient(135deg, #6a11cb, #2575fc); /* 보라색 → 파란색 그라데이션 */
+    color: white; /* 글자색 흰색 */
+    border-radius: 12px; /* 둥근 테두리 */
+    
+    /* 폰트 스타일 */
+    font-size: 2rem;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2); /* 부드러운 그림자 */
+    
+    /* 테두리 & 그림자 */
+    box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.2); /* 약한 그림자 효과 */
+    border: 2px solid rgba(255, 255, 255, 0.3); /* 반투명한 테두리 */
+    
+    /* 애니메이션 효과 */
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+/* 마우스 호버 시 살짝 올라오는 효과 */
+h2.text-center:hover {
+    transform: translateY(-3px);
+    box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+h3 {
+    font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+    font-weight: 700;
+}
+p {
+    font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+    font-weight: 400;
+}
+
+.navbar-brand {
+    color: white !important;
 }

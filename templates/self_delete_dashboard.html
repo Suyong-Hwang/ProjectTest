@@ -3,7 +3,7 @@
 {% block nav %}
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container d-flex justify-content-between align-items-center">
-        <a class="navbar-brand" href="{{ url_for('dashboard') }}">알레르기 및 질병 맞춤형 건강기능식품 추천 서비스</a>
+        <a class="navbar-brand" href="{{ url_for('dashboard') }}">개인 맞춤형 건강기능식품 추천 서비스</a>
         <div style="display: flex; align-items: center;">
             <span style="color:#fff;" class="me-3">환영합니다, {{ member.username }} 님!</span>
             <a href="/logout" class="btn btn-danger me-2">로그아웃</a>
@@ -12,8 +12,8 @@
 </nav>
 {% endblock %}
 {% block body %}
-<div class="content">
-    <h2 style="text-align:center;">{{userid}}님의 회원탈퇴 페이지</h2>
+<div class="container mt-4">
+    <h2 class="text-center">{{userid}}님의 회원탈퇴 페이지</h2>
     <div class="container">
         <form method="POST" action="{{ url_for('self_delete_member', userid=userid) }}">
             <div class="mb-3">

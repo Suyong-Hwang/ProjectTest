@@ -5,7 +5,7 @@
 {% block nav %}
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-        <a class="navbar-brand" href="{{ url_for('admin_dashboard') }}">알레르기 및 질병 맞춤형 건강기능식품 추천 서비스</a>
+        <a class="navbar-brand" href="{{ url_for('admin_dashboard') }}">개인 맞춤형 건강기능식품 추천 서비스</a>
         <div style="float:right;">
             <span style="color:#fff;" class="me-3">환영합니다, 관리자 님! </span>
             <a href="/logout" class="btn btn-danger">로그아웃</a>
@@ -29,9 +29,10 @@
     <i class="fas fa-envelope-open-text text-primary" 
        style="font-size: 16px; color: #1e3a8a; margin-left: 8px;"></i>
     </div>
-    <h2 style = "text-align : center;">회원들의 문의 정보</h2><br>
     {% if not posts %}
-    <h2 style = "text-align : center">회원들의 문의된 내용이 없습니다.</h2>
+    <h2 class="text-center" style = "text-align : center">회원들의 문의된 내용이 없습니다.</h2>
+    {% else %}
+    <h2 class="text-center" style = "text-align : center;">회원들의 문의 정보</h2><br>
     {% endif %}
     
     <div class="table-responsive">
@@ -40,12 +41,12 @@
                 <tr>
                     <th style="text-align:center;">아이디</th>
                     <th style="text-align:center;">이름</th>
-                    <th style="text-align:center;">이메일</th>
-                    <td style="text-align:center;">문의사유</td>
-                    <td style="text-align:center;">추가내용</td>
-                    <td style="text-align:center;">문의시간</td>
-                    <td style="text-align:center;">답변대기상태</td>
-                    <td style="text-align:center;">자세히보기</td>
+                    <th style="text-align:center;">문의사유</th>
+                    <th style="text-align:center;">추가내용</th>
+                    <th style="text-align:center;">문의시간</th>
+                    <th style="text-align:center;">자세히보기</th>
+                    <th style="text-align:center;">답변하시려면 이메일을 눌러주세요</th>
+                    <th style="text-align:center;">답변대기상태</th>
                 </tr>
             </thead>
             <tbody>
@@ -54,27 +55,31 @@
                 <tr>
                     <td style="text-align:center;">{{ post.userid }}</td>
                     <td style="text-align:center;">{{ post.username }}</td>
-                    <td style="text-align:center;">{{ post.email }}</td>
                     <td style="text-align:center;">{{ post.reason}}</td>
                     <td style="text-align:center;">{{ post.notes[:10]}}...</td>
                     <td style="text-align:center;">{{ post.enquired_at }}</td>
+                    <form action="{{ url_for('admin_view_posts_member', userid = post.userid)}}" method="POST">
+                        <input type="hidden" name="enquired_at" value="{{ post.enquired_at }}">
+                        <td style="text-align:center;">
+                            <button type="submit" class="btn btn-info btn-sm">자세히보기</button>
+                        </td>
+                    </form>
+                    <td style="text-align:center;">
+                    <a href="mailto:{{ post.email }}?subject=[답변] {{ post.reason }}&body={{ post.notes }}" class="btn btn-primary btn-sm"> 
+                    {{ post.email }}
+                    </a>
+                    </td>
                     <form action="{{ url_for('update_answer_status', userid=post.userid) }}" method="POST" onsubmit="return confirmComplete()">
                         <!-- enquired_at을 hidden 필드로 추가 -->
                         <input type="hidden" name="enquired_at" value="{{ post.enquired_at }}">
                         <td style="text-align:center;">
                             {% if post.answer_status != 'completion' %}
-                            <button type="submit" class="btn btn-warning btn-sm">답변대기중</button>
+                            <button type="submit" class="btn btn-warning btn-sm">답변 후 눌러주세요</button>
                             {% else %}
                             답변 완료
                             {% endif %}
                         </td>
                     </form> 
-                    <form action="{{ url_for('admin_view_posts_member', userid = post.userid)}}" method="POST">
-                        <input type="hidden" name="enquired_at" value="{{ post.enquired_at }}">
-                        <td style="text-align:center;">
-                            <button type="submit" class="btn btn-warning btn-sm">자세히보기</button>
-                        </td>
-                    </form>
                 </tr>
                 {% endfor %}
             </tbody>

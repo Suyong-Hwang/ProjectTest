@@ -4,6 +4,7 @@ import requests
 from datetime import datetime, timedelta
 from functools import wraps
 from models import DBManager
+import json
 
 app = Flask(__name__)
 
@@ -45,7 +46,7 @@ def check_and_update_dormant_members():
 
         # 다음 자정으로 last_update를 갱신
         last_update = now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
-    
+
 ### 푸터에 들어갈 날짜데이터 (context_processor 사용)
 @app.context_processor
 def inject_full_date():
@@ -77,10 +78,10 @@ manager.create_raw_material_table()
 manager.create_service_usage_table()
 
 #식품테이블에 오픈API데이터 채우기
-#api_url = 'http://openapi.foodsafetykorea.go.kr/api/c73eb08b363a44b88a78/I-0050/json/1/1'
+#api_url = 'http://openapi.foodsafetykorea.go.kr/api/c73eb08b363a44b88a78/I-0050/json/247/365'
 
 # 받은 데이터 저장
-# manager.store_raw_material_data(api_url)
+#manager.store_raw_material_data(api_url)
 
 ### 홈페이지
 @app.route('/')
@@ -117,6 +118,7 @@ def register():
         username = request.form['username']
         confirm_password = request.form['confirm_password']
         email = request.form['email']
+        gender = request.form['gender']
         #암호가 일치하는지 확인
         if password != confirm_password:
             flash('암호가 일치하지 않습니다', 'error')
@@ -142,13 +144,24 @@ def register():
             flash('이미 등록된 이메일 입니다.', 'error')
             return render_template('signup.html')
         # 생년월일이 올바른 날짜 형식인지 확인
+
         try:
             # 'YYYY-MM-DD' 형식으로 변환
-            birthday = datetime.strptime(birthday, "%Y-%m-%d").strftime("%Y-%m-%d")
+            birthday = datetime.strptime(birthday, "%Y-%m-%d")
         except ValueError:
             flash('잘못된 날짜 형식입니다. 생년월일을 다시 확인해주세요.', 'error')
             return render_template('signup.html')
-        if manager.register_pending_member(userid, username, password, email, birthday):
+
+        # 나이 계산 (현재 날짜와 비교)
+        today = datetime.today()
+        age = today.year - birthday.year - ((today.month, today.day) < (birthday.month, birthday.day))
+
+        # 만 18세 이하인 경우 가입 불가
+        if age < 18:
+            flash('만 18세 이상만 회원가입이 가능합니다.', 'error')
+            return render_template('signup.html')
+
+        if manager.register_pending_member(userid, username, password, email, birthday, gender):
             flash('회원가입 신청이 완료되었습니다. 관리자의 승인을 기다려 주세요.', 'success')
             return redirect(url_for('index'))
         flash('회원가입에 실패했습니다.', 'error')
@@ -478,8 +491,6 @@ def update_profile(userid):
 
 
 
-
-
 #로그인 후 서비스 정지 회원이 서비스 복구 신청 눌렀을때
 @app.route('/denied_service_member_dashboard/<userid>', methods=['GET','POST'])
 @login_required
@@ -566,8 +577,16 @@ def index_enquire():
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         #회원 이메일과 중복여부
         if manager.duplicate_email(email):
-            flash('이미 회원 가입된 이메일 입니다. 로그인해주세요', 'error')
-            return redirect(url_for('index_enquire'))
+            role = manager.duplicate_email(email)['role']
+            if role == "non_member":
+                reason = request.form['reason']
+                notes = request.form.get('notes')
+                manager.add_enquire_index(email, reason, notes, filename)
+                flash("문의하기가 관리자에게 전달되었습니다.", 'success')
+                return redirect(url_for('index'))
+            else : 
+                flash('이미 회원 가입된 이메일 입니다. 로그인해주세요', 'error')
+                return redirect(url_for('index_enquire'))
         reason = request.form['reason']
         notes = request.form.get('notes')
         manager.add_enquire_index(email, reason, notes, filename)
@@ -653,6 +672,30 @@ def admin_view_posts_nonmember(userid):
     return render_template("admin_view_posts_nonmember.html", post=post)
 
 
+#서비스 최근 활동 내역 확인하기
+@app.route('/service_history_member/<userid>', methods=['GET'])
+@login_required
+def service_history_member(userid):
+    # DB에서 사용자의 서비스 이용 내역 조회
+    service_records = manager.get_service_usage_by_userid(userid)
+    number = len(service_records)
+    member = manager.get_member_by_id(userid)  # 사용자 정보 가져오기
+    return render_template('service_history_member.html', service_records=service_records, member=member, number=number)
+
+
+#서비스에 등록된 제품들 보여주기
+@app.route('/all_product_card/<userid>/', methods=['GET'])
+@login_required
+def all_product_card(userid):
+    member = manager.get_member_by_id(userid)
+    products = manager.get_all_products()
+    manager.update_edited_product_data(products)
+    edited_products = manager.edit_product_data()
+    number = len(edited_products)
+    edited_names = [product['edited_name'] for product in edited_products]
+    manager.update_file_name(edited_names)
+    return render_template('all_product_card.html', member=member,edited_products=edited_products,number=number)
+
 #서비스시작
 @app.route('/start_service/<userid>', methods=['GET','POST'])
 @login_required
@@ -664,36 +707,40 @@ def start_service(userid):
     if request.method == 'POST':
         # POST로 받은 데이터 처리
         health_status = request.form.getlist('health_status')  # 예시: 체크박스에서 받은 값들
-        functionality_choices = request.form.getlist('product_functionality')  # 예시: 기능성 선택 값들
-
+        functionality_choices = request.form.getlist('product_functionality')
+        member = manager.get_member_by_id(userid)
+        if member['gender'] == 'male':
+            if functionality_choices == [] :
+                functionality_choices.extend(['체지방','간','갱년기 남성','피부','눈','관절','근력','기억력','인지기능','면역기능','면역과민반응','모발','배변','수면','혈당','혈중','키성장','운동수행능력','전립선']) 
+            else:
+                functionality_choices = functionality_choices  
+        else : 
+            if functionality_choices== [] : 
+                functionality_choices.extend(['체지방','간','갱년기 여성','피부','눈','관절','근력','기억력','인지기능','면역기능','면역과민반응','모발','배변','수면','혈당','혈중','키성장','운동수행능력'])
+                functionality_choices = functionality_choices
         # 받은 데이터로 적합한 제품들을 조회하거나 추천하는 로직을 추가
         # 예시: get_appropriate_products 함수를 사용하여 추천 제품 목록 가져오기
+
+        # 리스트를 쉼표로 연결된 문자열로 변환
+        health_status_str = ",".join(health_status) if health_status else None
+        functionality_choices_str = ",".join(functionality_choices) if functionality_choices else None
+
+        # service_usage 테이블에 데이터 삽입
+        manager.save_service_usage(userid, member['username'], health_status_str, functionality_choices_str)
+
+
         products = manager.get_appropriate_products(health_status, functionality_choices)
-        member = manager.get_member_by_id(userid)
-        number = len(products)
+    
         if not products :
             products = [] 
-        # # 추천된 제품 목록을 결과로 보여주기
-        used_service_health_status = ', '.join(health_status)  # 예: '심혈관 건강, 피부 건강'
-        used_service_functionality = ', '.join(functionality_choices)  # 예: '항산화, 체중 관리'
-        used_service_at = datetime.now()  # 현재 시간
+        
+        number = len(products)
+        print(number)
+        
+        
 
-        try:
-            # DB에 저장하는 메서드 호출
-            manager.save_service_usage(userid, member['username'], used_service_health_status, used_service_functionality, used_service_at)
-        except Exception as error:
-            print(f"서비스 사용 정보 저장 중 오류 발생: {error}")
+
         return render_template('product_recommendations.html', products=products , member=member, number=number)
-    
-#서비스 최근 활동 내역 확인하기
-@app.route('/service_history_member/<userid>', methods=['GET'])
-@login_required
-def service_history_member(userid):
-    # DB에서 사용자의 서비스 이용 내역 조회
-    service_records = manager.get_service_usage_by_userid(userid)
-    number = len(service_records)
-    member = manager.get_member_by_id(userid)  # 사용자 정보 가져오기
-    return render_template('service_history_member.html', service_records=service_records, member=member, number=number)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5010, debug=True)

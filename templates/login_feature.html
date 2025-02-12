@@ -5,104 +5,67 @@
 {% block nav %}
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container d-flex justify-content-between align-items-center">
-        <a class="navbar-brand" href="{{ url_for('dashboard') }}">알레르기 및 질병 맞춤형 건강기능식품 추천 서비스</a>
+        <a class="navbar-brand" href="{{ url_for('dashboard') }}">질병 맞춤형 건강기능식품 추천 서비스</a>
         <div style="display: flex; align-items: center;">
             <span style="color:#fff;" class="me-3">환영합니다, {{ member.username }} 님!</span>
-            <a href="/logout" class="btn btn-danger me-2">로그아웃</a>
+            <form action="{{ url_for('update_profile', userid=member.userid) }}" method="GET" class="me-2">
+                <button type="submit" class="btn btn-success">정보수정</button>
+            </form>
+            <a href="/logout" class="btn btn-warning me-2">로그아웃</a>
             <form action="{{ url_for('self_delete_member', userid=member.userid) }}" method="GET" style="margin: 0;">
-                <button type="submit" class="btn btn-warning">회원탈퇴</button>
+                <button type="submit" class="btn btn-danger">회원탈퇴</button>
             </form>
         </div>
     </div>  
 </nav>
 {% endblock %}
 {% block body %}
-<div class="container my-5">
-    <div class="text-center mb-5">
-        <h1 class="display-4 text-primary">맞춤형 건강기능식품 추천 서비스</h1>
-        <p class="lead">당신의 건강을 위한 최적의 솔루션을 제공합니다.</p>
-    </div>
-
-    <div class="row">
-        <!-- 기능 1 -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="card-title text-success">1. 개인 맞춤형 추천 시스템</h5>
-                    <p class="card-text">AI 기반 알고리즘이 사용자의 건강 정보를 분석하여 최적의 건강기능식품을 추천합니다.</p>
-                </div>
-            </div>
+    <div class="container my-5">
+        <div class="text-center mb-5">
+            <h2 class="text-center">개인 맞춤형 건강기능식품 추천 서비스</h2>
         </div>
 
-        <!-- 기능 2 -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="card-title text-success">2. 알레르기 성분 필터링</h5>
-                    <p class="card-text">알레르기 유발 성분이 포함된 제품은 자동으로 제외되며, 상세 성분 정보를 제공합니다.</p>
+        <div class="row">
+            <!-- 기능 1 -->
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title text-success">1. 개인 맞춤형 추천 시스템</h5>
+                        <p class="card-text">사용자의 건강 상태를 분석하여 특정 질병 관리에 최적화된 건강기능식품을 추천합니다.</p>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- 기능 3 -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="card-title text-success">3. 질병 관리 및 예방 지원</h5>
-                    <p class="card-text">특정 질병 관리 및 예방에 적합한 제품을 추천하여 건강 관리를 돕습니다.</p>
+            <!-- 기능 2 -->
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title text-success">2. 건강 관리에 도움을 제공</h5>
+                        <p class="card-text">사용자의 건강 이력을 바탕으로 질병 예방 및 관리에 도움이 되는 제품을 제공합니다.</p>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- 기능 4 -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="card-title text-success">4. 건강 목표 설정 기능</h5>
-                    <p class="card-text">체중 감량, 면역력 강화 등 개인의 건강 목표에 따라 맞춤형 제품을 추천합니다.</p>
+            <!-- 기능 3 -->
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title text-success">3. 영양 성분 분석</h5>
+                        <p class="card-text">원재료 성분의 연구결과를  분석하여 건강에 미치는 영향을 제공합니다.</p>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- 기능 5 -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="card-title text-success">5. 정기 구독 및 알림 서비스</h5>
-                    <p class="card-text">제품 복용 알림 및 정기 구독 기능으로 서비스를 더욱 편리하게 이용할 수 있습니다.</p>
+            <!-- 기능 4 -->
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title text-success">4. 개인 맞춤형 건강 목표 설정</h5>
+                        <p class="card-text">개인의 건강 목표(예: 혈압 조절, 혈당 관리 등)에 따라 적절한 제품을 추천합니다.</p>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- 기능 6 -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="card-title text-success">6. 사용자 리뷰 및 커뮤니티</h5>
-                    <p class="card-text">사용자 리뷰 확인 및 커뮤니티를 통해 건강 정보와 경험을 공유하세요.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- 기능 7 -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="card-title text-success">7. 전문가 상담 및 연계 서비스</h5>
-                    <p class="card-text">영양사 및 의사와의 상담을 통해 더욱 정확한 추천을 받을 수 있습니다.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- 기능 8 -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="card-title text-success">8. 실시간 건강 진단</h5>
-                    <p class="card-text">웨어러블 기기와 연동하여 실시간 건강 데이터를 분석합니다.</p>
-                </div>
-            </div>
         </div>
     </div>
-</div>
 {% endblock %}
