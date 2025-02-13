@@ -1,8 +1,10 @@
 from flask import Flask, session, url_for, render_template, flash, send_from_directory, jsonify ,request, redirect
 import os
+import requests
 from datetime import datetime, timedelta
 from functools import wraps
 from models import DBManager
+import json
 
 app = Flask(__name__)
 
@@ -12,15 +14,19 @@ app.secret_key = 'your-secret-key'  # 비밀 키 설정, 실제 애플리케이�
 
 manager = DBManager()
 
-##하루주기로 휴면 회원 자동 전환 
 
+# 파일 업로드 경로 설정
+app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'uploads')
+# 업로드 폴더가 없으면 생성
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+##하루주기로 휴면 회원 자동 전환 
 last_update= None
 @app.before_request
 def check_and_update_dormant_members():
     global last_update #외부에서 선언했기 떄문에 함수안에서 값을 변경하기위해서 global을 사용
     now = datetime.now()
 
-    
     #처음 시작할 때 last_update가 None이면 현재 시간을 자정으로 설정
     if last_update is None:
         result = manager.update_dormant_members()
@@ -29,7 +35,6 @@ def check_and_update_dormant_members():
         else:
             print("휴면 계정 업데이트 실패 또는 변경 없음.")
         last_update = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    
     
     # 하루가 경과하면 휴면 계정 업데이트 실행
     if (now - last_update).days >= 1:
@@ -51,6 +56,32 @@ def inject_full_date():
     weekday = weekdays[today_date.weekday()]
     full_date = f"{today} ({weekday})"
     return {"full_date": full_date}
+
+
+#members 데이터테이블 생성
+manager.create_members_table()
+
+#members에 관리자계정 생성
+
+manager.create_admin_user()
+
+#removed_members 데이터테이블 생성
+manager.create_removed_members_table()
+
+#enquiries 데이터테이블 생성
+manager.create_enquiries_table()
+
+#기능성식품 데이터테이블 생성
+manager.create_raw_material_table()
+
+#서비스 사용내역 데이터테이블 생성
+manager.create_service_usage_table()
+
+#식품테이블에 오픈API데이터 채우기
+#api_url = 'http://openapi.foodsafetykorea.go.kr/api/c73eb08b363a44b88a78/I-0050/json/247/365'
+
+# 받은 데이터 저장
+#manager.store_raw_material_data(api_url)
 
 ### 홈페이지
 @app.route('/')
@@ -87,6 +118,7 @@ def register():
         username = request.form['username']
         confirm_password = request.form['confirm_password']
         email = request.form['email']
+        gender = request.form['gender']
         #암호가 일치하는지 확인
         if password != confirm_password:
             flash('암호가 일치하지 않습니다', 'error')
@@ -112,13 +144,24 @@ def register():
             flash('이미 등록된 이메일 입니다.', 'error')
             return render_template('signup.html')
         # 생년월일이 올바른 날짜 형식인지 확인
+
         try:
             # 'YYYY-MM-DD' 형식으로 변환
-            birthday = datetime.strptime(birthday, "%Y-%m-%d").strftime("%Y-%m-%d")
+            birthday = datetime.strptime(birthday, "%Y-%m-%d")
         except ValueError:
             flash('잘못된 날짜 형식입니다. 생년월일을 다시 확인해주세요.', 'error')
             return render_template('signup.html')
-        if manager.register_pending_member(userid, username, password, email, birthday):
+
+        # 나이 계산 (현재 날짜와 비교)
+        today = datetime.today()
+        age = today.year - birthday.year - ((today.month, today.day) < (birthday.month, birthday.day))
+
+        # 만 18세 이하인 경우 가입 불가
+        if age < 18:
+            flash('만 18세 이상만 회원가입이 가능합니다.', 'error')
+            return render_template('signup.html')
+
+        if manager.register_pending_member(userid, username, password, email, birthday, gender):
             flash('회원가입 신청이 완료되었습니다. 관리자의 승인을 기다려 주세요.', 'success')
             return redirect(url_for('index'))
         flash('회원가입에 실패했습니다.', 'error')
@@ -405,7 +448,8 @@ def dormant_member_dashboard():
     member = manager.get_dormant_by_id(userid)
     return render_template('dormant_member_dashboard.html', member = member)
 
-#승인버튼 눌리면 관리자페이지에 표시
+
+#휴면 회원이 승인요청버튼 누르면 플래쉬매세지 출력
 @app.route('/active_approve_request', methods=['GET','POST'])
 @login_required
 def active_approve_request():
@@ -417,18 +461,51 @@ def active_approve_request():
         flash("승인 요청 중 오류가 발생했습니다. 다시 시도해주세요.", "error")
     return redirect(url_for('dormant_member_dashboard'))
 
-#로그인 후 서비스 정지 회원이 서비스 정보 눌렀을때
+#회원 정보 수정 
+@app.route('/update_profile/<userid>', methods=['GET', 'POST'])
+@login_required
+def update_profile(userid):
+    member = manager.get_member_by_id(userid)  # 회원 정보 가져오기
+
+    if request.method == 'POST':
+        # 폼에서 입력한 값 받아오기
+        username = request.form['username'] if request.form['username'] else member.username
+        email = request.form['email'] if request.form['email'] else member.email
+        birthday = request.form['birthday'] if request.form['birthday'] else member.birthday
+        password = request.form['password'] if request.form['password'] else None
+        confirm_password = request.form['confirm_password'] if request.form['confirm_password'] else None
+
+        # 비밀번호가 입력되었으면 확인
+        if password and password == confirm_password:
+            # 비밀번호 업데이트
+            manager.update_password(userid, password)
+
+        # 나머지 정보 업데이트
+        manager.update_member_info(userid, username, email, birthday)
+
+        # 성공 메시지나 다른 페이지로 리디렉션
+        flash('회원 정보가 성공적으로 수정되었습니다.', 'success')
+        return redirect(url_for('dashboard'))
+
+    return render_template('update_profile.html', member=member)
+
+
+
+#로그인 후 서비스 정지 회원이 서비스 복구 신청 눌렀을때
 @app.route('/denied_service_member_dashboard/<userid>', methods=['GET','POST'])
 @login_required
 def denied_service_member_dashboard(userid):
     if request.method == 'GET':
-        return render_template('denied_service_member_dashboard.html',userid=userid)
+        member= manager.get_member_by_id(userid)
+        return render_template('denied_service_member_dashboard.html', member=member)
     
     if request.method == 'POST':
         flash("서비스 활성화 신청이 접수되었습니다. 관리자 승인 대기 중입니다.", "success")
-        return redirect(url_for('dashboard'))  
+    else:
+        flash("서비스 활성화 신청이 실패했습니다. 다시 신청 해주세요", "error")    
+    return redirect(url_for('denied_service_member_dashboard'))  
 
-#승인버튼 눌리면 관리자페이지에 표시
+#서비스 정지 회원이 승인요청 버튼 눌리면 관리자페이지에 표시
 @app.route('/service_approve_request', methods=['GET','POST'])
 @login_required
 def service_approve_request():
@@ -438,7 +515,7 @@ def service_approve_request():
         flash("승인 요청이 완료되었습니다. 관리자의 승인을 기다려주세요.", "success")
     else:
         flash("승인 요청 중 오류가 발생했습니다. 다시 시도해주세요.", "error")
-    return redirect(url_for('dormant_member_dashboard'))
+    return redirect(url_for('denied_service_member_dashboard', userid= userid))
 
 # 회원 탈퇴하기
 @app.route('/self_delete_member/<userid>', methods=['GET','POST'])
@@ -446,11 +523,11 @@ def service_approve_request():
 def self_delete_member(userid):
     #회원탈퇴 페이지 열기
     if request.method == 'GET':
-        member = manager.get_member_by_info(userid)
+        member = manager.get_member_by_id(userid)
         return render_template('self_delete_dashboard.html', member=member, userid=userid)  #회원 탈퇴페이지 열기
     #회원탈퇴 페이지에서 회원탈퇴버튼 눌러서 members에서 데이터 삭제 후 removed_members에 저장
     if request.method == 'POST':
-        member = manager.get_member_by_info(userid) #로그인한 회원 정보 가져오기
+        member = manager.get_member_by_id(userid) #로그인한 회원 정보 가져오기
         userid = member['userid']
         username = member['username']
         email = member['email']
@@ -463,27 +540,207 @@ def self_delete_member(userid):
         removed_by = 'self_initiated_deletion'  # 승인 거부 사유
         manager.add_removed_member(userid, username, email, last_login, join_date, birthday, removed_by, reason, notes)
         manager.delete_member(userid)  # 회원 삭제
-
-    #승인 거부 처리 후, 대기 회원 목록 페이지로 리다이렉트
-    return render_template('complete_deletion.html', userid = userid)
-
+        #승인 거부 처리 후, 대기 회원 목록 페이지로 리다이렉트
+        return render_template('complete_deletion.html', userid = userid)
 
 
 
-#기능소개
+## 기능소개 페이지
+
+#홈페이지에서 기능소개
 @app.route('/feature')
-def feature():
-    return "기능 소개 페이지"
+def index_feature():
+    return render_template("index_feature.html")
 
-#문의하기 
-@app.route('/enqire')
-def enqire():
-    return "문의하기"
+#로그인시 기능소개
+@app.route('/login/feature')
+@login_required
+def login_feature():
+    userid = session['user']
+    member = manager.get_member_by_id(userid) 
+    return render_template("login_feature.html", member = member)
+
+
+### 문의하기 페이지
+##홈페이지에서 문의하기 
+@app.route('/index_enquire', methods=['GET','POST'])
+def index_enquire():
+    if request.method == 'GET':
+        return render_template("index_enquire.html")
+    
+    if request.method == 'POST':
+        email = request.form['email']
+        file = request.files['file']
+        filename = file.filename if file else None
+        # 파일이 있으면 저장
+        if filename:
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        #회원 이메일과 중복여부
+        if manager.duplicate_email(email):
+            role = manager.duplicate_email(email)['role']
+            if role == "non_member":
+                reason = request.form['reason']
+                notes = request.form.get('notes')
+                manager.add_enquire_index(email, reason, notes, filename)
+                flash("문의하기가 관리자에게 전달되었습니다.", 'success')
+                return redirect(url_for('index'))
+            else : 
+                flash('이미 회원 가입된 이메일 입니다. 로그인해주세요', 'error')
+                return redirect(url_for('index_enquire'))
+        reason = request.form['reason']
+        notes = request.form.get('notes')
+        manager.add_enquire_index(email, reason, notes, filename)
+        flash("문의하기가 관리자에게 전달되었습니다.", 'success')
+        return redirect(url_for('index'))
+
+
+##회원페이지에서 문의하기
+@app.route('/login_enquire/<userid>', methods=['GET','POST'])
+@login_required
+def login_enquire(userid):
+    if request.method == 'GET':
+        member = manager.get_member_by_id(userid)
+        return render_template("login_enquire.html", member=member)
+    
+    if request.method == 'POST':
+        member = manager.get_member_by_id(userid)
+        username = member['username']
+        email = member['email']
+        file = request.files['file']
+        filename = file.filename if file else None
+        # 파일이 있으면 저장
+        if filename:
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        reason = request.form['reason']
+        notes = request.form.get('notes')
+        manager.add_enquire_member(userid, username, email, reason, notes, filename)
+        flash("문의하기가 관리자에게 전달되었습니다.", 'success')
+        return redirect(url_for('dashboard'))
+
+##관리자 페이지에서 문의정보 보기
+##문의된 정보 보기
+@app.route('/admin/admin_management_posts')
+@admin_required
+def admin_management_posts():
+    return render_template("admin_management_posts.html")
+
+
+##회원 문의 정보 보기
+@app.route('/admin/admin_list_posts_member')
+@admin_required
+def admin_list_posts_member():
+    posts = manager.get_enquired_posts_member()
+    number = len(posts)
+    return render_template("admin_list_posts_member.html", posts=posts, number=number)
+
+##비회원 문의 정보 보기
+@app.route('/admin/admin_list_posts_nonmember')
+@admin_required
+def admin_list_posts_nonmember():
+    posts = manager.get_enquired_posts_nonmember()
+    number = len(posts)
+    return render_template("admin_list_posts_nonmember.html", posts=posts, number=number)
+
+## 답변상태 변환하기 
+@app.route('/update_status_member/<userid>', methods=['POST'])
+@admin_required
+def update_answer_status(userid):
+    enquired_at_str = request.form['enquired_at']
+    enquired_at = datetime.strptime(enquired_at_str, '%Y-%m-%d %H:%M:%S')
+    manager.update_answer_status(userid,enquired_at)
+    if userid != '비회원':
+        return redirect(url_for('admin_list_posts_member'))
+    else :
+        return redirect(url_for('admin_list_posts_nonmember'))
+
+#회원 문의사항 상세정보보기
+@app.route('/admin/admin_view_posts_member/<userid>', methods=['POST'])
+@admin_required
+def admin_view_posts_member(userid):
+    enquired_at_str = request.form['enquired_at']
+    enquired_at = datetime.strptime(enquired_at_str, '%Y-%m-%d %H:%M:%S')
+    post = manager.get_enquired_post_by_id(userid,enquired_at)
+    return render_template("admin_view_posts_member.html", post=post)
+
+#비회원 문의사항 상세정보보기
+@app.route('/admin/admin_view_posts_nonmember/<userid>', methods=['POST'])
+@admin_required
+def admin_view_posts_nonmember(userid):
+    enquired_at_str = request.form['enquired_at']
+    enquired_at = datetime.strptime(enquired_at_str, '%Y-%m-%d %H:%M:%S')
+    post = manager.get_enquired_post_by_id(userid,enquired_at)
+    return render_template("admin_view_posts_nonmember.html", post=post)
+
+
+#서비스 최근 활동 내역 확인하기
+@app.route('/service_history_member/<userid>', methods=['GET'])
+@login_required
+def service_history_member(userid):
+    # DB에서 사용자의 서비스 이용 내역 조회
+    service_records = manager.get_service_usage_by_userid(userid)
+    number = len(service_records)
+    member = manager.get_member_by_id(userid)  # 사용자 정보 가져오기
+    return render_template('service_history_member.html', service_records=service_records, member=member, number=number)
+
+
+#서비스에 등록된 제품들 보여주기
+@app.route('/all_product_card/<userid>/', methods=['GET'])
+@login_required
+def all_product_card(userid):
+    member = manager.get_member_by_id(userid)
+    products = manager.get_all_products()
+    manager.update_edited_product_data(products)
+    edited_products = manager.edit_product_data()
+    number = len(edited_products)
+    edited_names = [product['edited_name'] for product in edited_products]
+    manager.update_file_name(edited_names)
+    return render_template('all_product_card.html', member=member,edited_products=edited_products,number=number)
 
 #서비스시작
-@app.route('/start_service')
-def start_service():
-    return "서비스 시작 페이지"
+@app.route('/start_service/<userid>', methods=['GET','POST'])
+@login_required
+def start_service(userid):
+    if request.method == 'GET' :
+        member = manager.get_member_by_id(userid)
+        return render_template('start_service.html', member=member)
+    
+    if request.method == 'POST':
+        # POST로 받은 데이터 처리
+        health_status = request.form.getlist('health_status')  # 예시: 체크박스에서 받은 값들
+        functionality_choices = request.form.getlist('product_functionality')
+        member = manager.get_member_by_id(userid)
+        if member['gender'] == 'male':
+            if functionality_choices == [] :
+                functionality_choices.extend(['체지방','간','갱년기 남성','피부','눈','관절','근력','기억력','인지기능','면역기능','면역과민반응','모발','배변','수면','혈당','혈중','키성장','운동수행능력','전립선']) 
+            else:
+                functionality_choices = functionality_choices  
+        else : 
+            if functionality_choices== [] : 
+                functionality_choices.extend(['체지방','간','갱년기 여성','피부','눈','관절','근력','기억력','인지기능','면역기능','면역과민반응','모발','배변','수면','혈당','혈중','키성장','운동수행능력'])
+                functionality_choices = functionality_choices
+        # 받은 데이터로 적합한 제품들을 조회하거나 추천하는 로직을 추가
+        # 예시: get_appropriate_products 함수를 사용하여 추천 제품 목록 가져오기
+
+        # 리스트를 쉼표로 연결된 문자열로 변환
+        health_status_str = ",".join(health_status) if health_status else None
+        functionality_choices_str = ",".join(functionality_choices) if functionality_choices else None
+
+        # service_usage 테이블에 데이터 삽입
+        manager.save_service_usage(userid, member['username'], health_status_str, functionality_choices_str)
+
+
+        products = manager.get_appropriate_products(health_status, functionality_choices)
+    
+        if not products :
+            products = [] 
+        
+        number = len(products)
+        print(number)
+        
+        
+
+
+        return render_template('product_recommendations.html', products=products , member=member, number=number)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5010, debug=True)

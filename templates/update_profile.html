@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}
+<title>회원정보 수정</title>
+{% endblock %}
+
+{% block body %}
+    <div class="sign-form-container signup-page">
+        <div class="signup-card">
+            <h2 class="text-center mb-4">회원정보 수정</h2>
+            <form method="POST" action="{{ url_for('update_profile', userid=member.userid) }}">
+                <!-- 이름 입력 -->
+                <div class="mb-3">
+                    <label for="username" class="form-label">이름</label>
+                    <input type="text" class="form-control" id="username" name="username" value="{{ member.username }}">
+                </div>
+
+                <!-- 이메일 입력 -->
+                <div class="mb-3">
+                    <label for="email" class="form-label">이메일</label>
+                    <input type="email" class="form-control" id="email" name="email" value="{{ member.email }}">
+                </div>
+
+                <!-- 생년월일 입력 -->
+                <div class="mb-3">
+                    <label for="birthday" class="form-label">생년월일</label>
+                    <input type="date" class="form-control" id="birthday" name="birthday" value="{{ member.birthday }}">
+                </div>
+
+                <!-- 비밀번호 입력 (선택) -->
+                <div class="mb-3">
+                    <label for="password" class="form-label">새 비밀번호</label>
+                    <input type="password" class="form-control" id="password" name="password">
+                </div>
+
+                <!-- 비밀번호 재입력 (선택)-->
+                <div class="mb-3">
+                    <label for="confirm_password" class="form-label">새 비밀번호 확인</label>
+                    <input type="password" class="form-control" id="confirm_password" name="confirm_password">
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">회원정보 수정</button>
+            </form>
+            <div class="text-center mt-4">
+                <a href="{{ url_for('dashboard') }}">돌아가기</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+

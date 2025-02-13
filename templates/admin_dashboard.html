@@ -5,7 +5,7 @@
 {% block nav %}    
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-            <a class="navbar-brand" href="{{ url_for('admin_dashboard')}}">알레르기 및 질병 맞춤형 건강기능식품 추천 서비스
+            <a class="navbar-brand" href="{{ url_for('admin_dashboard')}}">개인 맞춤형 건강기능식품 추천 서비스
             </a>
             
                 <div style="float:right;">
@@ -21,44 +21,32 @@
 </div> 
 {% endblock %}
 {% block body %}
-<div class="container mt-5">
-    <!-- 메뉴판 -->
-    <div class="row text-center">
-        <!-- 기능소개 -->
-        <div class="col-md-4">
-            <div class="card shadow-lg border-0 mb-4" 
-                 style="background: #f2f2f2; border-radius: 15px; transition: transform 0.3s, box-shadow 0.3s;">
-                <div class="card-body">
-                    <i class="fas fa-cogs fa-3x text-primary mb-3"></i>
-                    <h3 class="card-title">기능소개</h3>
-                    <p class="card-text">우리 서비스의 주요 기능과 특징을 확인하세요!</p>
-                    <a href="{{ url_for('feature') }}" class="btn btn-primary btn-lg">자세히 보기</a>
+<div style="max-height: 80vh; overflow-y: auto;">
+    <div class="container d-flex justify-content-center align-items-center" style="min-height: 40vh;">
+        <div class="row justify-content-center text-center w-100">
+            <!-- 문의사항 확인하기 -->
+            <div class="col-lg-5 col-md-6 mb-4">
+                <div class="card shadow-lg border-0" 
+                    style="background: #f2f2f2; border-radius: 15px; transition: transform 0.3s, box-shadow 0.3s;">
+                    <div class="card-body">
+                        <i class="fas fa-comment-dots fa-3x text-primary mb-3"></i>
+                        <h3 class="card-title">문의사항관리</h3>
+                        <p class="card-text">문의사항을 확인합니다.</p>
+                        <a href="{{ url_for('admin_management_posts') }}" class="btn btn-primary btn-lg">문의확인하기</a>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- 문의사항 확인하기 -->
-        <div class="col-md-4">
-            <div class="card shadow-lg border-0 mb-4" 
-                 style="background: #f2f2f2; border-radius: 15px; transition: transform 0.3s, box-shadow 0.3s;">
-                <div class="card-body">
-                    <i class="fas fa-comment-dots fa-3x text-primary mb-3"></i>
-                    <h3 class="card-title">문의사항</h3>
-                    <p class="card-text">문의사항을 확인합니다</p>
-                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary btn-lg">확인하기</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- 회원관리 -->
-        <div class="col-md-4">
-            <div class="card shadow-lg border-0 mb-4" 
-                 style="background: #f2f2f2; border-radius: 15px; transition: transform 0.3s, box-shadow 0.3s;">
-                <div class="card-body">
-                    <i class="fas fa-users fa-3x text-success mb-3"></i> <!-- 아이콘 변경 -->
-                    <h3 class="card-title">회원 관리</h3>
-                    <p class="card-text">회원 정보를 확인하고 관리합니다.</p>
-                    <a href="{{ url_for('member_management') }}" class="btn btn-success btn-lg">관리하기</a>
+            <!-- 비회원 문의 -->
+            <div class="col-lg-5 col-md-6 mb-4">
+                <div class="card shadow-lg border-0" 
+                    style="background: #f2f2f2; border-radius: 15px; transition: transform 0.3s, box-shadow 0.3s;">
+                    <div class="card-body">
+                        <i class="fas fa-users fa-3x text-primary mb-3"></i>  <!-- 아이콘 -->
+                        <h3 class="card-title">회원 관리</h3>
+                        <p class="card-text">회원 정보를 확인하고 관리합니다.</p>
+                        <a href="{{ url_for('member_management') }}" class="btn btn-primary btn-lg">관리하기</a>
+                    </div>
                 </div>
             </div>
         </div>

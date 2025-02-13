@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}
+  <title>회원 문의 상세 정보</title>
+{% endblock %}
+{% block nav %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" href="{{ url_for('admin_dashboard') }}">개인 맞춤형 건강기능식품 추천 서비스</a>
+        <div style="float:right;">
+            <span style="color:#fff;" class="me-3">환영합니다, 관리자 님!</span>
+            <a href="/logout" class="btn btn-danger">로그아웃</a>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+{% block body %}
+<div class="container mt-5">
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white text-center">
+            <h2>문의 상세 정보</h2>
+        </div>
+        <div class="card-body">
+            <!-- 사용자 정보 -->
+            <div class="mb-4">
+                <h5 class="text-secondary">사용자 정보</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <strong>이메일:</strong> {{ post.email }}
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <strong>문의일자:</strong> {{ post.enquired_at }}
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <!-- 문의 내용 -->
+            <div class="mb-4">
+                <h5 class="text-secondary">문의 내용</h5>
+                <p><strong>문의사유:</strong> {{ post.reason }}</p>
+                <p><strong>추가내용:</strong> {{ post.notes }}</p>
+            </div>
+            <hr>
+            <!-- 첨부 파일 -->
+            <div class="mb-4">
+              <h5 class="text-secondary">첨부 파일</h5>
+            {% if post.filename %}
+                <!-- 파일 다운로드 링크 -->
+                <a href="{{ file_url }}" target="_blank" class="btn btn-outline-primary">
+                  첨부 파일 보기
+                </a>
+                {% set file_url = url_for('static', filename='uploads/' + post.filename) %}
+                <!-- 이미지 파일인지 확인 -->
+                {% if post.filename.endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')) %}
+                    <div class="mb-3">
+                        <img src="{{ file_url }}" alt="첨부 이미지" class="img-thumbnail" style="max-width: 30%; height: auto;">
+                    </div>
+                {% endif %}
+            {% else %}
+              <p><strong>첨부파일없음</strong></p>
+            {% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="card-footer text-center">
+            <a href="{{ url_for('admin_list_posts_member') }}" class="btn btn-secondary">돌아가기</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
